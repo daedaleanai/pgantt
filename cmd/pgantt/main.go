@@ -5,7 +5,7 @@ import (
 	"os/user"
 	"path"
 
-	"github.com/daedaleanai/ptasks/pkg/ptasks"
+	"github.com/daedaleanai/pgantt/pkg/pgantt"
 	log "github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )

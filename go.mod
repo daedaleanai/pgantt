@@ -1,4 +1,4 @@
-module github.com/daedaleanai/ptasks
+module github.com/daedaleanai/pgantt
 
 go 1.15
 
