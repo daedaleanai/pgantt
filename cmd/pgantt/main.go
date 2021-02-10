@@ -22,7 +22,7 @@ func main() {
 		ForceFormatting: true,
 	})
 
-	log.Info("Starting PTask...")
+	log.Info("Starting PGantt...")
 
 	level := log.InfoLevel
 	if *logLevel != "" {
@@ -40,14 +40,14 @@ func main() {
 		log.Fatalf("Cannot get user info for current user: %s", err)
 	}
 
-	configFile := path.Join(usr.HomeDir, ".ptasks")
-	opts := ptasks.NewOpts()
+	configFile := path.Join(usr.HomeDir, ".pgantt")
+	opts := pgantt.NewOpts()
 	err = opts.LoadYaml(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	phab, err := ptasks.NewPhabricator(opts.PhabricatorUri, opts.ApiKey)
+	phab, err := pgantt.NewPhabricator(opts.PhabricatorUri, opts.ApiKey)
 	if err != nil {
 		log.Fatalf("Cannot make a connection to Phabricator: %s", err)
 	}
@@ -57,4 +57,6 @@ func main() {
 		log.Fatalf("Unable to fetch tasks: %v", err)
 	}
 	log.Infof("Top-level tasks: %v", len(tasks))
+
+	pgantt.RunWebServer(opts)
 }

@@ -1,4 +1,4 @@
-package ptasks
+package pgantt
 
 import (
 	"fmt"
