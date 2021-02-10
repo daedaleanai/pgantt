@@ -52,5 +52,9 @@ func main() {
 		log.Fatalf("Cannot make a connection to Phabricator: %s", err)
 	}
 
-	phab.GetTasksForProject("Platforms")
+	tasks, err := phab.GetTasksForProject("Platforms")
+	if err != nil {
+		log.Fatalf("Unable to fetch tasks: %v", err)
+	}
+	log.Infof("Top-level tasks: %v", len(tasks))
 }
