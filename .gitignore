@@ -1,0 +1,5 @@
+*~
+cmd/pgantt/pgantt
+pkg/pgantt/assets_prod.go
+ui/node_modules
+ui/package-lock.json
