@@ -18,11 +18,13 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
-import { PageHeader, Radio } from 'antd';
+import { PageHeader, Radio, Checkbox } from 'antd';
 
 class GanttToolbar extends Component {
   state = {
     currentZoom: 'Days',
+    showProposed: false,
+    showClosed: true
   };
 
   handleZoomChange = (e) => {
@@ -34,6 +36,18 @@ class GanttToolbar extends Component {
       this.props.onZoomChange(e.target.value);
     }
   }
+
+  onToggleProposed = e => {
+    this.setState({
+      showProposed: e.target.checked,
+    });
+  };
+
+  onToggleClosed = e => {
+    this.setState({
+      showClosed: e.target.checked,
+    });
+  };
 
   render() {
     const options = [
@@ -47,6 +61,18 @@ class GanttToolbar extends Component {
           ghost={false}
           title="Platforms"
           extra={[
+            <Checkbox
+              checked={this.state.showProposed}
+              onChange={this.onToggleProposed}
+            >
+              Show Proposed Tasks
+            </Checkbox>,
+            <Checkbox
+              checked={this.state.showClosed}
+              onChange={this.onToggleClosed}
+            >
+              Show Closed Tasks
+            </Checkbox>,
             <Radio.Group
               options={options}
               onChange={this.handleZoomChange}
