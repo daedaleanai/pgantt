@@ -37,13 +37,19 @@ class PGanttApp extends Component {
   render() {
     const { currentZoom } = this.state;
     return (
-      <div>
-        <PGanttNav />
-        <GanttToolbar
-          zoom={currentZoom}
-          onZoomChange={this.handleZoomChange}
-        />
-        <Gantt zoom={currentZoom} />
+      <div className="box">
+        <div class="row header">
+          <PGanttNav />
+          <GanttToolbar
+            zoom={currentZoom}
+            onZoomChange={this.handleZoomChange}
+          />
+        </div>
+        <div className="row content">
+          <Gantt zoom={currentZoom} />
+        </div>
+        <div className="row footer">
+        </div>
       </div>
     );
   }
