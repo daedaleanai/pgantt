@@ -18,7 +18,42 @@ class Gantt extends Component {
     gantt.parse(data);
   }
 
+  setZoom(value) {
+    switch (value) {
+    case 'Days':
+      gantt.config.min_column_width = 70;
+      gantt.config.scale_unit = 'week';
+      gantt.config.date_scale = 'Week %W';
+      gantt.config.subscales = [
+        { unit: 'day', step: 1, date: '%d %M' }
+      ];
+      gantt.config.scale_height = 60;
+      break;
+    case 'Months':
+      gantt.config.min_column_width = 70;
+      gantt.config.scale_unit = 'month';
+      gantt.config.date_scale = '%F';
+      gantt.config.scale_height = 60;
+      gantt.config.subscales = [
+        { unit:'week', step:1, date:'Week %W' }
+      ];
+      break;
+    default:
+      break;
+    }
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.zoom !== nextProps.zoom;
+  }
+
+  componentDidUpdate() {
+    gantt.render();
+  }
+
   render() {
+    const { zoom } = this.props;
+    this.setZoom(zoom);
     return (
       <div
         ref={ (input) => { this.ganttContainer = input; } }
