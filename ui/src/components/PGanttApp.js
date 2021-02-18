@@ -59,7 +59,6 @@ class PGanttApp extends Component {
 
   render() {
     const { currentZoom, startDate, endDate } = this.state;
-    console.log("zoom", this.state);
 
     return (
       <div className="box">
