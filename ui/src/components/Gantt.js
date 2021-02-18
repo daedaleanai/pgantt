@@ -35,6 +35,7 @@ class Gantt extends Component {
     gantt.init(this.ganttContainer);
     gantt.config.show_tasks_outside_timescale = true;
     gantt.parse(data);
+    this.initGanttDataProcessor();
   }
 
   setZoom(value) {
@@ -65,6 +66,25 @@ class Gantt extends Component {
   setRange(start, end) {
     gantt.config.start_date = start.toDate();
     gantt.config.end_date = end.toDate();
+  }
+
+  initGanttDataProcessor() {
+    const onDataUpdated = this.props.onDataUpdated;
+    this.dataProcessor = gantt.createDataProcessor((entityType, action, item, id) => {
+      return new Promise((resolve, reject) => {
+        if (onDataUpdated) {
+         onDataUpdated(entityType, action, item, id);
+        }
+        return resolve();
+      });
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.dataProcessor) {
+      this.dataProcessor.destructor();
+      this.dataProcessor = null;
+    }
   }
 
   shouldComponentUpdate(nextProps) {
