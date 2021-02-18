@@ -33,6 +33,7 @@ const data = {
 class Gantt extends Component {
   componentDidMount() {
     gantt.init(this.ganttContainer);
+    gantt.config.show_tasks_outside_timescale = true;
     gantt.parse(data);
   }
 
@@ -61,8 +62,25 @@ class Gantt extends Component {
     }
   }
 
+  setRange(start, end) {
+    gantt.config.start_date = start.toDate();
+    gantt.config.end_date = end.toDate();
+  }
+
   shouldComponentUpdate(nextProps) {
-    return this.props.zoom !== nextProps.zoom;
+    if (this.props.zoom !== nextProps.zoom) {
+      return true;
+    }
+
+    if (this.props.startDate !== nextProps.startDate) {
+      return true;
+    }
+
+    if (this.props.endDate !== nextProps.endDate) {
+      return true;
+    }
+
+    return false;
   }
 
   componentDidUpdate() {
@@ -70,7 +88,8 @@ class Gantt extends Component {
   }
 
   render() {
-    const { zoom } = this.props;
+    const { zoom, startDate, endDate } = this.props;
+    this.setRange(startDate, endDate);
     this.setZoom(zoom);
     return (
       <div

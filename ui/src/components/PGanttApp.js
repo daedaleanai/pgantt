@@ -18,35 +18,65 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
+import moment from 'moment';
 
 import PGanttNav from './PGanttNav';
 import Gantt from './Gantt';
 import GanttToolbar from './GanttToolbar';
 
 class PGanttApp extends Component {
-  state = {
-    currentZoom: 'Days'
-  };
-
   handleZoomChange = (zoom) => {
     this.setState({
       currentZoom: zoom
     });
   }
 
+  handleRangeChange = (startDate, endDate) => {
+    this.setState({
+      startDate: startDate,
+      endDate: endDate
+    });
+  }
+
+  constructor() {
+    super();
+
+    let start = moment();
+    let end = moment();
+    if (start.day() !== 0) {
+      start = start.day(0); // previous Sunday
+    }
+    if (end.day() !== 6) {
+      end = end.day(6); // next Saturday
+    }
+
+    this.state = {
+      startDate: start,
+      endDate: end,
+      currentZoom: "Days"
+    };
+  }
+
   render() {
-    const { currentZoom } = this.state;
+    const { currentZoom, startDate, endDate } = this.state;
+    console.log("zoom", this.state);
+
     return (
       <div className="box">
-        <div class="row header">
+        <div className="row header">
           <PGanttNav />
           <GanttToolbar
             zoom={currentZoom}
             onZoomChange={this.handleZoomChange}
+            onRangeChange={this.handleRangeChange}
           />
         </div>
         <div className="row content">
-          <Gantt zoom={currentZoom} />
+          <Gantt
+            zoom={currentZoom}
+            startDate={startDate}
+            endDate={endDate}
+          />
         </div>
         <div className="row footer">
         </div>
