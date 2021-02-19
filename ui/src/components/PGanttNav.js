@@ -20,6 +20,10 @@
 import React, { Component } from 'react';
 import { Menu } from 'antd';
 import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
+import { connect } from 'react-redux';
+
+import { projectsSet } from '../actions/projects';
+import { projectsGet } from '../utils/api';
 
 const { SubMenu } = Menu;
 
@@ -40,6 +44,11 @@ class PGanttNav extends Component {
     this.setState({ current: e.key });
   };
 
+  componentDidMount() {
+    projectsGet()
+      .then(data => this.props.projectsSet(data.Data));
+  }
+
   render() {
     const { current } = this.state;
     return (
@@ -53,14 +62,25 @@ class PGanttNav extends Component {
           PGantt
         </Menu.Item>
         <SubMenu key="projects" icon={<SettingOutlined />} title="Projects">
-          <Menu.Item key="setting:1">Option 1</Menu.Item>
-          <Menu.Item key="setting:2">Option 2</Menu.Item>
-          <Menu.Item key="setting:3">Option 3</Menu.Item>
-          <Menu.Item key="setting:4">Option 4</Menu.Item>
+          {this.props.projects.map(project => (
+            <Menu.Item key={project.Phid}>{project.Name}</Menu.Item>
+          ))}
         </SubMenu>
       </Menu>
     );
   }
 }
 
-export default PGanttNav;
+function mapStateToProps(state) {
+  return {
+    ...state
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    projectsSet: (data) => dispatch(projectsSet(data))
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(PGanttNav);

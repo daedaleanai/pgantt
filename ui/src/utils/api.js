@@ -17,32 +17,23 @@
 // along with PGantt.  If not, see <https://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter } from 'react-router-dom';
-import { createStore, combineReducers } from 'redux';
-import { Provider } from 'react-redux';
+const loc = window.location;
+const api = process.env.NODE_ENV === 'production'
+  ? `${loc.protocol}//${loc.host}/api`
+  : 'http://localhost:9999/api';
 
-import 'antd/dist/antd.css';
-import 'dhtmlx-gantt/codebase/dhtmlxgantt.css';
+const headers = {
+  'Accept': 'application/json',
+};
 
-import './index.css';
-import PGanttApp from './components/PGanttApp';
+const responseHandler = (response) => {
+  if(!response.ok)
+    throw Error(response.error);
+  return response.json();
+};
 
-import { projectsReducer } from './reducers/projects';
-
-export const store = createStore(
-  combineReducers({
-    projects: projectsReducer,
-  }),
-  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-);
-
-ReactDOM.render(
-  <Provider store={store}>
-    <BrowserRouter>
-      <PGanttApp />
-    </BrowserRouter>
-  </Provider>,
-  document.getElementById('root')
-);
+export const projectsGet = () => {
+  const url = `${api}/projects`;
+  return fetch(url, { headers })
+    .then(responseHandler);
+};
