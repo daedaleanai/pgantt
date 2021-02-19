@@ -8,7 +8,7 @@ body {
   height: 100%;
 }
 
-#root,#root div:only-child {
+#root {
   height: 100%;
 }
 
