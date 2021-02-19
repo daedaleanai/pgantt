@@ -20,24 +20,65 @@
 import React, { Component } from 'react';
 import moment from 'moment';
 
-import PGanttNav from './PGanttNav';
-import ProjectView from './ProjectView';
 import Gantt from './Gantt';
 import GanttToolbar from './GanttToolbar';
 
-class PGanttApp extends Component {
+class ProjectView extends Component {
+  handleZoomChange = (zoom) => {
+    this.setState({
+      currentZoom: zoom
+    });
+  }
+
+  handleRangeChange = (startDate, endDate) => {
+    this.setState({
+      startDate: startDate,
+      endDate: endDate
+    });
+  }
+
+  constructor() {
+    super();
+
+    let start = moment();
+    let end = moment();
+    if (start.day() !== 0) {
+      start = start.day(0); // previous Sunday
+    }
+    if (end.day() !== 6) {
+      end = end.day(6); // next Saturday
+    }
+
+    this.state = {
+      startDate: start,
+      endDate: end,
+      currentZoom: "Days"
+    };
+  }
+
   render() {
+    const { currentZoom, startDate, endDate } = this.state;
+
     return (
-      <div className="box">
+      <div className="row content">
+        <div className="box">
         <div className="row header">
-          <PGanttNav />
+          <GanttToolbar
+            zoom={currentZoom}
+            onZoomChange={this.handleZoomChange}
+            onRangeChange={this.handleRangeChange}
+          />
         </div>
-        <ProjectView />
-        <div className="row footer">
+        <div className="row content">
+          <Gantt
+            zoom={currentZoom}
+            startDate={startDate}
+            endDate={endDate}
+          />
+        </div></div>
         </div>
-      </div>
     );
   }
 }
 
-export default PGanttApp;
+export default ProjectView;
