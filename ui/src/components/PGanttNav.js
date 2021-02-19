@@ -21,6 +21,7 @@ import React, { Component } from 'react';
 import { Menu } from 'antd';
 import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import { projectsSet } from '../actions/projects';
 import { projectsGet } from '../utils/api';
@@ -36,7 +37,7 @@ const styles = {
 
 class PGanttNav extends Component {
   state = {
-    current: 'mail',
+    current: 'pgantt',
   };
 
   handleClick = e => {
@@ -59,11 +60,17 @@ class PGanttNav extends Component {
         theme='dark'
       >
         <Menu.Item key="pgantt" style={styles.logo}>
-          PGantt
+          <Link to='/'>
+            PGantt
+          </Link>
         </Menu.Item>
         <SubMenu key="projects" icon={<SettingOutlined />} title="Projects">
           {this.props.projects.map(project => (
-            <Menu.Item key={project.Phid}>{project.Name}</Menu.Item>
+            <Menu.Item key={project.Phid}>
+              <Link to={'/project/' + project.Phid}>
+                {project.Name}
+              </Link>
+            </Menu.Item>
           ))}
         </SubMenu>
       </Menu>
