@@ -22,6 +22,7 @@ package pgantt
 //go:generate go run --tags=dev assets_generate.go
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -29,10 +30,58 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func RunWebServer(opts *Opts) {
+type Response struct {
+	Status string
+	Data   interface{}
+}
+
+type StateHandler struct {
+	s *StateManager
+}
+
+func writeError(w http.ResponseWriter, code int, err error) {
+	w.WriteHeader(code)
+	resp := Response{
+		"ERROR",
+		err.Error(),
+	}
+
+	bytes, err := json.Marshal(resp)
+	if err != nil {
+		log.Errorf("Cannot serialize error respense: %s", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
+}
+
+func writeData(w http.ResponseWriter, data interface{}) {
+	resp := Response{
+		"SUCCESS",
+		data,
+	}
+
+	bytes, err := json.Marshal(resp)
+	if err != nil {
+		log.Errorf("Cannot serialize data respense: %s", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
+}
+
+type ProjectsHandler StateHandler
+
+func (h ProjectsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	projects := h.s.Projects()
+	writeData(w, projects)
+}
+
+func RunWebServer(sm *StateManager, opts *Opts) {
 	assets := &fs.Index404Fs{Assets}
 	ui := http.FileServer(assets)
 	http.Handle("/", ui)
+	http.Handle("/api/projects", ProjectsHandler{sm})
 	addressString := fmt.Sprintf("localhost:%d", opts.Port)
 	log.Infof("Serving at: http://%s", addressString)
 	log.Fatal("Server failure: ", http.ListenAndServe(addressString, nil))

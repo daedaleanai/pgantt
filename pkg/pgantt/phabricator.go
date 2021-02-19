@@ -24,11 +24,11 @@ import (
 	"net/url"
 	"reflect"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/thought-machine/gonduit"
 	"github.com/thought-machine/gonduit/core"
 	"github.com/thought-machine/gonduit/requests"
 	"github.com/thought-machine/gonduit/responses"
-	//	log "github.com/sirupsen/logrus"
 )
 
 type Phabricator struct {
@@ -59,6 +59,60 @@ type Task struct {
 	}
 	URL      string
 	Children []Task
+}
+
+func (p *Phabricator) ProjectByName(name string) (*Project, error) {
+	req := requests.ProjectQueryRequest{Names: []string{"Platforms"}}
+	res, err := p.c.ProjectQuery(req)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := reflect.ValueOf(res.Data).MapKeys()
+
+	if len(keys) == 0 {
+		return nil, fmt.Errorf("Project not found: %s", name)
+	}
+
+	phid, ok := keys[0].Interface().(string)
+	if !ok {
+		return nil, fmt.Errorf("Malformed project query response")
+	}
+
+	log.Debugf("Located PHID for %q: %s", name, phid)
+
+	var proj Project
+	proj.Name = name
+	proj.Phid = phid
+
+	after := ""
+	for {
+		req := requests.SearchRequest{
+			Constraints: map[string]interface{}{
+				"projects": []string{phid},
+			},
+			After: after,
+		}
+		var res responses.SearchResponse
+		if err := p.c.Call("project.column.search", &req, &res); err != nil {
+			return nil, err
+		}
+
+		for _, el := range res.Data {
+			col := Column{}
+			col.Name = el.Fields["name"].(string)
+			col.Phid = el.PHID
+			log.Debugf("Found column in %q: %q (%s)", name, col.Name, col.Phid)
+			proj.Columns = append(proj.Columns, col)
+		}
+
+		after = res.Cursor.After
+		if after == "" {
+			break
+		}
+	}
+
+	return &proj, nil
 }
 
 func (p *Phabricator) getProjectPhid(name string) (string, error) {

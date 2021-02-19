@@ -66,16 +66,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	phab, err := pgantt.NewPhabricator(opts.PhabricatorUri, opts.ApiKey)
+	sm, err := pgantt.NewStateManager(opts)
 	if err != nil {
-		log.Fatalf("Cannot make a connection to Phabricator: %s", err)
+		log.Fatal(err)
 	}
 
-	tasks, err := phab.GetTasksForProject("Platforms")
-	if err != nil {
-		log.Fatalf("Unable to fetch tasks: %v", err)
-	}
-	log.Infof("Top-level tasks: %v", len(tasks))
-
-	pgantt.RunWebServer(opts)
+	pgantt.RunWebServer(sm, opts)
 }
