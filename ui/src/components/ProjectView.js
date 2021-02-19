@@ -18,12 +18,17 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
-import moment from 'moment';
 
 import Gantt from './Gantt';
 import GanttToolbar from './GanttToolbar';
 
 class ProjectView extends Component {
+  state = {
+    startDate: null,
+    endDate: null,
+    currentZoom: "Days"
+  };
+
   handleZoomChange = (zoom) => {
     this.setState({
       currentZoom: zoom
@@ -35,25 +40,6 @@ class ProjectView extends Component {
       startDate: startDate,
       endDate: endDate
     });
-  }
-
-  constructor() {
-    super();
-
-    let start = moment();
-    let end = moment();
-    if (start.day() !== 0) {
-      start = start.day(0); // previous Sunday
-    }
-    if (end.day() !== 6) {
-      end = end.day(6); // next Saturday
-    }
-
-    this.state = {
-      startDate: start,
-      endDate: end,
-      currentZoom: "Days"
-    };
   }
 
   render() {

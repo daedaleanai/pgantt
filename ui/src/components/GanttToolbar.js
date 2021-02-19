@@ -56,8 +56,12 @@ class GanttToolbar extends Component {
       dateRange: date
     });
 
-    if (this.props.onRangeChange && date) {
-      this.props.onRangeChange(date[0], date[1]);
+    if (this.props.onRangeChange) {
+      if (date) {
+        this.props.onRangeChange(date[0], date[1]);
+      } else {
+        this.props.onRangeChange(null, null);
+      }
     }
   }
 

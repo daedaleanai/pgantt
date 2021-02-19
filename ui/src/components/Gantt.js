@@ -19,6 +19,7 @@
 
 import React, { Component } from 'react';
 import { gantt } from 'dhtmlx-gantt';
+import moment from 'moment';
 
 const data = {
     data: [
@@ -64,8 +65,21 @@ class Gantt extends Component {
   }
 
   setRange(start, end) {
-    gantt.config.start_date = start.toDate();
-    gantt.config.end_date = end.toDate();
+    let s = start;
+    let e = end;
+    if (start == null || end === null) {
+      s = moment();
+      e = moment();
+      if (s.day() !== 0) {
+        s = s.day(0); // previous Sunday
+      }
+      if (e.day() !== 6) {
+        e = e.day(6); // next Saturday
+      }
+
+    }
+    gantt.config.start_date = s.toDate();
+    gantt.config.end_date = e.toDate();
   }
 
   initGanttDataProcessor() {
