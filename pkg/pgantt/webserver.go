@@ -51,6 +51,7 @@ func writeError(w http.ResponseWriter, code int, err error) {
 		log.Errorf("Cannot serialize error respense: %s", err)
 		return
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
 }
@@ -66,6 +67,7 @@ func writeData(w http.ResponseWriter, data interface{}) {
 		log.Errorf("Cannot serialize data respense: %s", err)
 		return
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
 }
