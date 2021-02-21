@@ -47,7 +47,7 @@ class PGanttNav extends Component {
 
   componentDidMount() {
     projectsGet()
-      .then(data => this.props.projectsSet(data.Data))
+      .then(data => this.props.projectsSet(data.data))
       .catch(msg => message.error(msg.toString()));
   }
 
@@ -67,9 +67,9 @@ class PGanttNav extends Component {
         </Menu.Item>
         <SubMenu key="projects" icon={<SettingOutlined />} title="Projects">
           {this.props.projects.map(project => (
-            <Menu.Item key={project.Phid}>
-              <Link to={'/project/' + project.Phid}>
-                {project.Name}
+            <Menu.Item key={project.phid}>
+              <Link to={'/project/' + project.phid}>
+                {project.name}
               </Link>
             </Menu.Item>
           ))}
