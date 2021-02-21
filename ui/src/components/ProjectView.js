@@ -18,9 +18,11 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 
 import Gantt from './Gantt';
 import GanttToolbar from './GanttToolbar';
+import WrongRoute from './WrongRoute';
 
 class ProjectView extends Component {
   state = {
@@ -43,6 +45,10 @@ class ProjectView extends Component {
   }
 
   render() {
+    if (!this.props.projectExists) {
+      return (<WrongRoute/>);
+    }
+
     const { currentZoom, startDate, endDate } = this.state;
 
     return (
@@ -68,4 +74,15 @@ class ProjectView extends Component {
   }
 }
 
-export default ProjectView;
+function mapStateToProps(state, ownProps) {
+  const proj = state.projects.filter(proj => proj.phid === ownProps.match.params.phid);
+  return {
+    projectExists: proj.length !== 0
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {};
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectView);
