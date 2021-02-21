@@ -50,6 +50,7 @@ class ProjectView extends Component {
         <div className="box">
         <div className="row header">
           <GanttToolbar
+            phid={this.props.match.params.phid}
             zoom={currentZoom}
             onZoomChange={this.handleZoomChange}
             onRangeChange={this.handleRangeChange}

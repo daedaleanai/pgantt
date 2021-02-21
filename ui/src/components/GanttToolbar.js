@@ -19,6 +19,7 @@
 
 import React, { Component } from 'react';
 import { PageHeader, Radio, Checkbox, DatePicker } from 'antd';
+import { connect } from 'react-redux';
 
 const { RangePicker } = DatePicker;
 
@@ -75,7 +76,7 @@ class GanttToolbar extends Component {
       <div className="zoom-bar">
         <PageHeader
           ghost={false}
-          title="Platforms"
+          title={this.props.projectName}
           extra={[
             <Checkbox
               key="45462ce1-2d60-4f3d-8fa5-265a024724c8"
@@ -111,4 +112,15 @@ class GanttToolbar extends Component {
   }
 }
 
-export default GanttToolbar;
+function mapStateToProps(state, ownProps) {
+  const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
+  return {
+    projectName: proj.length !== 0 ? proj[0].name : ""
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {};
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(GanttToolbar);
