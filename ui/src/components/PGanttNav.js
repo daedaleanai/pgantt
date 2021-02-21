@@ -18,7 +18,7 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
-import { Menu } from 'antd';
+import { Menu, message } from 'antd';
 import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -47,7 +47,8 @@ class PGanttNav extends Component {
 
   componentDidMount() {
     projectsGet()
-      .then(data => this.props.projectsSet(data.Data));
+      .then(data => this.props.projectsSet(data.Data))
+      .catch(msg => message.error(msg.toString()));
   }
 
   render() {

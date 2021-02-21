@@ -27,8 +27,9 @@ const headers = {
 };
 
 const responseHandler = (response) => {
-  if(!response.ok)
+  if(!response.ok) {
     throw Error(response.error);
+  }
   return response.json();
 };
 
