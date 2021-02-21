@@ -23,11 +23,15 @@ import { Result, Button } from 'antd';
 class WrongRoute extends Component {
   render() {
     return (
-      <Result
-        status="404"
-        title="404"
-        subTitle="Sorry, this is not what you're looking for."
-      />
+      <div className="vcenter">
+        <div className="vcontainer">
+          <Result
+            status="404"
+            title="404"
+            subTitle="Sorry, this is not what you're looking for."
+          />
+        </div>
+      </div>
     );
   }
 }
