@@ -20,12 +20,12 @@
 package pgantt
 
 type Column struct {
-	Name string
-	Phid string
+	Name string `json:"name"`
+	Phid string `json:"phid"`
 }
 
 type Project struct {
-	Name    string
-	Phid    string
-	Columns []Column
+	Name    string   `json:"name"`
+	Phid    string   `json:"phid"`
+	Columns []Column `json:"columns"`
 }
