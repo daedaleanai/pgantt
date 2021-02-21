@@ -36,7 +36,7 @@ type Phabricator struct {
 	endpoint string
 }
 
-type Task struct {
+type PTask struct {
 	ID     int
 	PHID   string
 	Title  string
@@ -58,7 +58,7 @@ type Task struct {
 		Value string
 	}
 	URL      string
-	Children []Task
+	Children []PTask
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {
@@ -131,7 +131,7 @@ func (p *Phabricator) getProjectPhid(name string) (string, error) {
 	return keys[0].Interface().(string), err
 }
 
-func (p *Phabricator) GetTasksForProject(name string) ([]Task, error) {
+func (p *Phabricator) GetTasksForProject(name string) ([]PTask, error) {
 	phid, err := p.getProjectPhid(name)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (p *Phabricator) GetTasksForProject(name string) ([]Task, error) {
 	after := ""
 	type TaskInfo struct {
 		top  bool
-		task *Task
+		task *PTask
 	}
 	taskMap := make(map[string]TaskInfo)
 
@@ -160,7 +160,7 @@ func (p *Phabricator) GetTasksForProject(name string) ([]Task, error) {
 		}
 
 		for _, el := range res.Data {
-			t := Task{}
+			t := PTask{}
 			t.ID = el.ID
 			t.PHID = el.PHID
 			t.Title = el.Fields["name"].(string)
@@ -213,7 +213,7 @@ func (p *Phabricator) GetTasksForProject(name string) ([]Task, error) {
 		}
 	}
 
-	var tasks []Task
+	var tasks []PTask
 	for _, t := range taskMap {
 		if t.top {
 			tasks = append(tasks, *t.task)
