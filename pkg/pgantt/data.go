@@ -29,3 +29,27 @@ type Project struct {
 	Phid    string   `json:"phid"`
 	Columns []Column `json:"columns"`
 }
+
+type Task struct {
+	Id          string  `json:"id"`
+	Parent      string  `json:"parent,omitempty"`
+	Text        string  `json:"text"`
+	Type        string  `json:"type,omitempty"`
+	StartDate   string  `json:"start_date,omitempty"`
+	Duration    string  `json:"duration,omitempty"`
+	Progress    float32 `json:"progress"`
+	Open        bool    `json:"open"`
+	Unscheduled bool    `json:"unscheduled"`
+}
+
+type Link struct {
+	Id     string `json:"id"`
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Type   string `json:"type"`
+}
+
+type PlanningData struct {
+	Data  []Task `json:"data"`
+	Links []Link `json:"links"`
+}

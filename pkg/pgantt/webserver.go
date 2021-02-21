@@ -73,10 +73,47 @@ func writeData(w http.ResponseWriter, data interface{}) {
 }
 
 type ProjectsHandler StateHandler
+type PlanHandler StateHandler
 
 func (h ProjectsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	projects := h.s.Projects()
 	writeData(w, projects)
+}
+
+func (h PlanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	planning := PlanningData{
+		Data: []Task{
+			Task{
+				Id:        "1",
+				Text:      "Task #1",
+				Open:      true,
+				StartDate: "22-02-2021",
+				Duration:  "2",
+			},
+			Task{
+				Id:        "2",
+				Text:      "Task #2",
+				Open:      true,
+				StartDate: "25-02-2021",
+				Duration:  "1",
+			},
+			Task{
+				Id:          "3",
+				Text:        "Task #3",
+				Open:        true,
+				Unscheduled: true,
+			},
+		},
+		Links: []Link{
+			Link{
+				Id:     "1-2",
+				Source: "1",
+				Target: "2",
+				Type:   "1",
+			},
+		},
+	}
+	writeData(w, planning)
 }
 
 func RunWebServer(sm *StateManager, opts *Opts) {
@@ -84,6 +121,7 @@ func RunWebServer(sm *StateManager, opts *Opts) {
 	ui := http.FileServer(assets)
 	http.Handle("/", ui)
 	http.Handle("/api/projects", ProjectsHandler{sm})
+	http.Handle("/api/plan", PlanHandler{sm})
 	addressString := fmt.Sprintf("localhost:%d", opts.Port)
 	log.Infof("Serving at: http://%s", addressString)
 	log.Fatal("Server failure: ", http.ListenAndServe(addressString, nil))
