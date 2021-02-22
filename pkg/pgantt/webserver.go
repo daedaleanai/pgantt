@@ -40,7 +40,6 @@ type StateHandler struct {
 }
 
 func writeError(w http.ResponseWriter, code int, err error) {
-	w.WriteHeader(code)
 	resp := Response{
 		"ERROR",
 		err.Error(),
@@ -53,6 +52,8 @@ func writeError(w http.ResponseWriter, code int, err error) {
 	}
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	w.WriteHeader(code)
 	w.Write(bytes)
 }
 
@@ -69,6 +70,8 @@ func writeData(w http.ResponseWriter, data interface{}) {
 	}
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	w.WriteHeader(http.StatusOK)
 	w.Write(bytes)
 }
 
@@ -109,7 +112,7 @@ func (h PlanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Id:     "1-2",
 				Source: "1",
 				Target: "2",
-				Type:   "1",
+				Type:   "0",
 			},
 		},
 	}
@@ -121,7 +124,7 @@ func RunWebServer(sm *StateManager, opts *Opts) {
 	ui := http.FileServer(assets)
 	http.Handle("/", ui)
 	http.Handle("/api/projects", ProjectsHandler{sm})
-	http.Handle("/api/plan", PlanHandler{sm})
+	http.Handle("/api/plan/", PlanHandler{sm})
 	addressString := fmt.Sprintf("localhost:%d", opts.Port)
 	log.Infof("Serving at: http://%s", addressString)
 	log.Fatal("Server failure: ", http.ListenAndServe(addressString, nil))
