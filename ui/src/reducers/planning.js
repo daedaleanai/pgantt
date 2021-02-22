@@ -17,34 +17,19 @@
 // along with PGantt.  If not, see <https://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter } from 'react-router-dom';
-import { createStore, combineReducers } from 'redux';
-import { Provider } from 'react-redux';
+import { PLAN_SET } from '../actions/planning';
 
-import 'antd/dist/antd.css';
-import 'dhtmlx-gantt/codebase/dhtmlxgantt.css';
+const planningState = {
+  data: [],
+  links: [],
+};
 
-import './index.css';
-import PGanttApp from './components/PGanttApp';
+export function planningReducer(state = planningState, action) {
+  switch(action.type) {
+  case PLAN_SET:
+    return action.plan;
 
-import { projectsReducer } from './reducers/projects';
-import { planningReducer } from './reducers/planning';
-
-export const store = createStore(
-  combineReducers({
-    projects: projectsReducer,
-    planning: planningReducer,
-  }),
-  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-);
-
-ReactDOM.render(
-  <Provider store={store}>
-    <BrowserRouter>
-      <PGanttApp />
-    </BrowserRouter>
-  </Provider>,
-  document.getElementById('root')
-);
+  default:
+    return state;
+  }
+}
