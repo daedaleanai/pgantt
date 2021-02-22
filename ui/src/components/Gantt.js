@@ -19,7 +19,13 @@
 
 import React, { Component } from 'react';
 import { gantt } from 'dhtmlx-gantt';
+import { message } from 'antd';
 import moment from 'moment';
+import { connect } from 'react-redux';
+
+import { planSet } from '../actions/planning';
+import { planGet } from '../utils/api';
+import { objectEquals } from '../utils/helpers';
 
 const data = {
     data: [
@@ -32,11 +38,27 @@ const data = {
 };
 
 class Gantt extends Component {
+  fetchData = (phid) => {
+    planGet(phid, true)
+      .then(data => this.props.planSet(data.data))
+      .catch(msg => message.error(msg.toString()));
+  }
+
   componentDidMount() {
     gantt.init(this.ganttContainer);
     gantt.config.show_tasks_outside_timescale = true;
-    gantt.parse(data);
+    gantt.parse(this.props.plan);
+    this.fetchData(this.props.phid);
     this.initGanttDataProcessor();
+    setInterval(() => this.fetchData(this.props.phid), 1000);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const thisPhid = this.props.phid;
+    const nextPhid = nextProps.phid;
+    if(thisPhid !== nextPhid) {
+      this.fetchData(nextPhid);
+    }
   }
 
   setZoom(value) {
@@ -114,10 +136,31 @@ class Gantt extends Component {
       return true;
     }
 
+    if (this.props.plan.data.length !== nextProps.plan.data.length) {
+      return true;
+    }
+
+    for (var i = 0; i < this.props.plan.data.length; i++) {
+      if (!objectEquals(this.props.plan.data[i], nextProps.plan.data[i])) {
+        return false;
+      }
+    }
+
+    if (this.props.plan.links.length !== nextProps.plan.links.length) {
+      return true;
+    }
+
+    for (i = 0; i < this.props.plan.links.length; i++) {
+      if (!objectEquals(this.props.plan.links[i], nextProps.plan.links[i])) {
+        return false;
+      }
+    }
+
     return false;
   }
 
   componentDidUpdate() {
+    gantt.parse(this.props.plan);
     gantt.render();
   }
 
@@ -134,4 +177,16 @@ class Gantt extends Component {
   }
 }
 
-export default Gantt;
+function mapStateToProps(state) {
+  return {
+    plan: state.planning
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    planSet: (data) => dispatch(planSet(data))
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Gantt);

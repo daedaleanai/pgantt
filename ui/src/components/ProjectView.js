@@ -64,6 +64,7 @@ class ProjectView extends Component {
         </div>
         <div className="row content">
           <Gantt
+            phid={this.props.match.params.phid}
             zoom={currentZoom}
             startDate={startDate}
             endDate={endDate}
