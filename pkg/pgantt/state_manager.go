@@ -30,6 +30,7 @@ type StateManager struct {
 	phab     *Phabricator
 	m        sync.Mutex
 	projects []Project
+	tasks    map[string]map[string]*PTask
 }
 
 func NewStateManager(opts *Opts) (*StateManager, error) {
@@ -52,6 +53,16 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 		sm.projects = append(sm.projects, *proj)
 	}
 
+	sm.tasks = make(map[string]map[string]*PTask)
+	for _, proj := range sm.projects {
+		log.Infof("Syncing tasks for %q, it may take a while...", proj.Name)
+		sm.tasks[proj.Phid] = make(map[string]*PTask)
+		sm.tasks[proj.Phid], err = sm.phab.SyncTasksForProject(proj.Phid, sm.tasks[proj.Phid])
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return sm, nil
 }
 
@@ -59,4 +70,36 @@ func (s *StateManager) Projects() []Project {
 	s.m.Lock()
 	defer s.m.Unlock()
 	return s.projects
+}
+
+func (s *StateManager) PlanningData(phid string) *PlanningData {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if _, ok := s.tasks[phid]; !ok {
+		return nil
+	}
+
+	plan := &PlanningData{}
+	tasks := s.tasks[phid]
+	taskMap := make(map[string]bool)
+	var add func(t *PTask)
+	add = func(t *PTask) {
+		if _, added := taskMap[t.Task.Id]; added {
+			return
+		}
+
+		if t.Task.Parent != "" {
+			add(tasks[t.Task.Parent])
+		}
+
+		plan.Data = append(plan.Data, t.Task)
+	}
+
+	for _, task := range s.tasks[phid] {
+		add(task)
+	}
+
+	plan.Links = make([]Link, 0)
+	return plan
 }

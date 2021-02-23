@@ -40,6 +40,8 @@ type Task struct {
 	Progress    float32 `json:"progress"`
 	Open        bool    `json:"open"`
 	Unscheduled bool    `json:"unscheduled"`
+	Column      string  `json:"column"`
+	Url         string  `json:"url"`
 }
 
 type Link struct {

@@ -37,32 +37,12 @@ type Phabricator struct {
 }
 
 type PTask struct {
-	ID     int
-	PHID   string
-	Title  string
-	Column struct {
-		ID   int
-		PHID string
-		Name string
-	}
-	Owner struct {
-		PHID string
-		Name string
-	}
-	Priority struct {
-		Name  string
-		Value int
-	}
-	Status struct {
-		Name  string
-		Value string
-	}
-	URL      string
-	Children []PTask
+	Mtime uint64
+	Task  Task
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {
-	req := requests.ProjectQueryRequest{Names: []string{"Platforms"}}
+	req := requests.ProjectQueryRequest{Names: []string{name}}
 	res, err := p.c.ProjectQuery(req)
 	if err != nil {
 		return nil, err
@@ -131,19 +111,12 @@ func (p *Phabricator) getProjectPhid(name string) (string, error) {
 	return keys[0].Interface().(string), err
 }
 
-func (p *Phabricator) GetTasksForProject(name string) ([]PTask, error) {
-	phid, err := p.getProjectPhid(name)
-	if err != nil {
-		return nil, err
+func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) (map[string]*PTask, error) {
+	if tasks == nil {
+		tasks = make(map[string]*PTask)
 	}
 
 	after := ""
-	type TaskInfo struct {
-		top  bool
-		task *PTask
-	}
-	taskMap := make(map[string]TaskInfo)
-
 	for {
 		req := requests.SearchRequest{
 			Constraints: map[string]interface{}{
@@ -160,63 +133,53 @@ func (p *Phabricator) GetTasksForProject(name string) ([]PTask, error) {
 		}
 
 		for _, el := range res.Data {
-			t := PTask{}
-			t.ID = el.ID
-			t.PHID = el.PHID
-			t.Title = el.Fields["name"].(string)
-			col := el.Attachments["columns"]["boards"].(map[string]interface{})[phid].(map[string]interface{})["columns"].([]interface{})[0].(map[string]interface{})
-			t.Column.ID = int(col["id"].(float64))
-			t.Column.PHID = col["phid"].(string)
-			t.Column.Name = col["name"].(string)
-			if ophid, ok := el.Fields["ownerPHID"]; ok && ophid != nil {
-				t.Owner.PHID = ophid.(string)
+			taskPhid := el.PHID
+			mtime := uint64(el.Fields["dateModified"].(float64))
+			update := false
+
+			ptask, ok := tasks[taskPhid]
+			if !ok || ptask.Mtime < mtime {
+				update = true
 			}
-			t.Priority.Name = el.Fields["priority"].(map[string]interface{})["name"].(string)
-			t.Priority.Value = int(el.Fields["priority"].(map[string]interface{})["value"].(float64))
-			t.Status.Name = el.Fields["status"].(map[string]interface{})["name"].(string)
-			t.Status.Value = el.Fields["status"].(map[string]interface{})["value"].(string)
-			t.URL = fmt.Sprintf("%sT%d", p.endpoint, t.ID)
-			taskMap[t.PHID] = TaskInfo{
-				top:  true,
-				task: &t,
+
+			if update {
+				log.Debugf("Updating task %q", taskPhid)
+				ptask := &PTask{}
+				tasks[taskPhid] = ptask
+				ptask.Mtime = mtime
+				ptask.Task.Id = taskPhid
+				ptask.Task.Text = el.Fields["name"].(string)
+				ptask.Task.Open = el.Fields["status"].(map[string]interface{})["value"].(string) == "open"
+				col := el.Attachments["columns"]["boards"].(map[string]interface{})[phid].(map[string]interface{})["columns"].([]interface{})[0].(map[string]interface{})
+				ptask.Task.Column = col["phid"].(string)
+				ptask.Task.Url = fmt.Sprintf("%sT%d", p.endpoint, el.ID)
+				ptask.Task.Unscheduled = true
+
+				// Find out who the parent is
+				req := requests.SearchRequest{
+					Constraints: map[string]interface{}{
+						"projects":   []string{phid},
+						"subtaskIDs": []int{el.ID},
+					},
+				}
+
+				var res responses.SearchResponse
+				if err := p.c.Call("maniphest.search", &req, &res); err != nil {
+					return nil, err
+				}
+
+				// No parent
+				if len(res.Data) == 0 {
+					continue
+				}
+
+				ptask.Task.Parent = res.Data[0].PHID
 			}
 		}
 
 		after = res.Cursor.After
 		if after == "" {
 			break
-		}
-	}
-
-	for _, t := range taskMap {
-		req := requests.SearchRequest{
-			Constraints: map[string]interface{}{
-				"projects":  []string{phid},
-				"parentIDs": []int{t.task.ID},
-			},
-			Attachments: map[string]bool{
-				"columns": true,
-			},
-			After: after,
-		}
-
-		var res responses.SearchResponse
-		if err := p.c.Call("maniphest.search", &req, &res); err != nil {
-			return nil, err
-		}
-
-		for _, el := range res.Data {
-			if c, ok := taskMap[el.PHID]; ok {
-				t.task.Children = append(t.task.Children, *c.task)
-				c.top = false
-			}
-		}
-	}
-
-	var tasks []PTask
-	for _, t := range taskMap {
-		if t.top {
-			tasks = append(tasks, *t.task)
 		}
 	}
 
