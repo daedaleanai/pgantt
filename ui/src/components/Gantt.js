@@ -27,16 +27,6 @@ import { planSet } from '../actions/planning';
 import { planGet } from '../utils/api';
 import { objectEquals } from '../utils/helpers';
 
-const data = {
-    data: [
-        { id: 1, text: 'Task #1', start_date: '15-04-2019', duration: 3, progress: 0.6 },
-        { id: 2, text: 'Task #2', start_date: '18-04-2019', duration: 3, progress: 0.4 }
-    ],
-    links: [
-        { id: 1, source: 1, target: 2, type: '0' }
-    ]
-};
-
 class Gantt extends Component {
   fetchData = (phid) => {
     planGet(phid, true)
@@ -47,6 +37,42 @@ class Gantt extends Component {
   componentDidMount() {
     gantt.init(this.ganttContainer);
     gantt.config.show_tasks_outside_timescale = true;
+
+    gantt.i18n.setLocale({
+      labels:{
+        time_enable_button: "Schedule",
+        time_disable_button: "Unschedule",
+        section_details: "Details",
+        section_title: "Title",
+        section_column: "Column"
+      }
+    });
+
+    const columns = this.props.project.columns.map((obj) => {
+      return {key: obj.phid, label: obj.name};
+    });
+
+    const fields = [
+      {name: "title", height: 70, map_to: "text", type: "textarea", focus: true},
+      {name: "details", height: 16, type: "template", map_to: "details"},
+      {name: "column", height:22, map_to: "column", type: "select", options: columns},
+      {name: "time", map_to: "auto", button: true, type: "duration_optional"}
+    ];
+
+    gantt.config.lightbox.sections = fields;
+    gantt.config.lightbox.milestone_sections = fields;
+
+    gantt.attachEvent("onLightboxSave", function (id, task, is_new) {
+      task.unscheduled = !task.start_date;
+      return true;
+    });
+
+    gantt.attachEvent("onBeforeLightbox", function (id) {
+      var task = gantt.getTask(id);
+      task.details = `<b>URL:</b> <a href="${task.url}">${task.url}</a>`;
+      return true;
+    });
+
     gantt.parse(this.props.plan);
     this.fetchData(this.props.phid);
     this.initGanttDataProcessor();
@@ -177,9 +203,11 @@ class Gantt extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
   return {
-    plan: state.planning
+    plan: state.planning,
+    project: proj.length !== 0 ? proj[0] : null
   };
 }
 
