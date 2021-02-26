@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
 
 	"github.com/ljanyst/go-srvutils/fs"
 	log "github.com/sirupsen/logrus"
@@ -35,8 +36,20 @@ type Response struct {
 	Data   interface{} `json:"data"`
 }
 
+type ActionStatus struct {
+	Action string `json:"action"`
+	Tid    string `json:"tid,omitempty"`
+}
+
 type StateHandler struct {
 	s *StateManager
+}
+
+func setupHeader(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
 }
 
 func writeError(w http.ResponseWriter, code int, err error) {
@@ -50,9 +63,7 @@ func writeError(w http.ResponseWriter, code int, err error) {
 		log.Errorf("Cannot serialize error respense: %s", err)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	setupHeader(w)
 	w.WriteHeader(code)
 	w.Write(bytes)
 }
@@ -68,22 +79,21 @@ func writeData(w http.ResponseWriter, data interface{}) {
 		log.Errorf("Cannot serialize data respense: %s", err)
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	setupHeader(w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(bytes)
 }
 
 type ProjectsHandler StateHandler
-type PlanHandler StateHandler
+type PlanProvider StateHandler
+type PlanEditor StateHandler
 
 func (h ProjectsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	projects := h.s.Projects()
 	writeData(w, projects)
 }
 
-func (h PlanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h PlanProvider) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	planning := h.s.PlanningData(r.URL.Path)
 	if planning == nil {
 		writeError(w, 404, fmt.Errorf("Unknown project %s", r.URL.Path))
@@ -92,12 +102,58 @@ func (h PlanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeData(w, planning)
 }
 
+func (h PlanEditor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "OPTIONS" {
+		setupHeader(w)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	typ := path.Base(r.URL.Path)
+	phid := path.Dir(r.URL.Path)
+	defer h.s.SyncTasks()
+
+	if typ == "task" {
+		var task Task
+		err := json.NewDecoder(r.Body).Decode(&task)
+		if err != nil {
+			writeError(w, 400, err)
+			return
+		}
+
+		if r.Method == "DELETE" {
+			writeError(w, 400, fmt.Errorf("Task deletion is not supported"))
+			return
+		}
+
+		id, err := h.s.EditTask(phid, &task)
+		if err != nil {
+			writeError(w, 400, err)
+			return
+		}
+
+		status := ActionStatus{}
+		if r.Method == "POST" {
+			status.Action = "inserted"
+			status.Tid = id
+
+		} else {
+			status.Action = "updated"
+		}
+		writeData(w, status)
+		return
+	}
+
+	writeError(w, 400, fmt.Errorf("Unsupported %s request for %q", r.Method, typ))
+}
+
 func RunWebServer(sm *StateManager, opts *Opts) {
 	assets := &fs.Index404Fs{Assets}
 	ui := http.FileServer(assets)
 	http.Handle("/", ui)
 	http.Handle("/api/projects", ProjectsHandler{sm})
-	http.Handle("/api/plan/", http.StripPrefix("/api/plan/", PlanHandler{sm}))
+	http.Handle("/api/plan/", http.StripPrefix("/api/plan/", PlanProvider{sm}))
+	http.Handle("/api/edit/", http.StripPrefix("/api/edit/", PlanEditor{sm}))
 	addressString := fmt.Sprintf("localhost:%d", opts.Port)
 	log.Infof("Serving at: http://%s", addressString)
 	log.Fatal("Server failure: ", http.ListenAndServe(addressString, nil))

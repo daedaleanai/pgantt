@@ -44,6 +44,7 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 
 	log.Infof("Created a connection to Phabricator at: %s", opts.PhabricatorUri)
 
+	sm.tasks = make(map[string]map[string]*PTask)
 	for _, projName := range opts.Projects {
 		log.Debugf("Attempting to fetch project info for: %s", projName)
 		proj, err := sm.phab.ProjectByName(projName)
@@ -51,19 +52,28 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 			return nil, err
 		}
 		sm.projects = append(sm.projects, *proj)
+		sm.tasks[proj.Phid] = make(map[string]*PTask)
 	}
 
-	sm.tasks = make(map[string]map[string]*PTask)
-	for _, proj := range sm.projects {
-		log.Infof("Syncing tasks for %q, it may take a while...", proj.Name)
-		sm.tasks[proj.Phid] = make(map[string]*PTask)
-		sm.tasks[proj.Phid], err = sm.phab.SyncTasksForProject(proj.Phid, sm.tasks[proj.Phid])
+	log.Infof("Syncing tasks, it may take a while...")
+	if err := sm.SyncTasks(); err != nil {
+		return nil, err
+	}
+	return sm, nil
+}
+
+func (s *StateManager) SyncTasks() error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var err error
+	for _, proj := range s.projects {
+		s.tasks[proj.Phid], err = s.phab.SyncTasksForProject(proj.Phid, s.tasks[proj.Phid])
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-
-	return sm, nil
+	return nil
 }
 
 func (s *StateManager) Projects() []Project {
@@ -76,12 +86,12 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	if _, ok := s.tasks[phid]; !ok {
+	tasks, ok := s.tasks[phid]
+	if !ok {
 		return nil
 	}
 
 	plan := &PlanningData{}
-	tasks := s.tasks[phid]
 	taskMap := make(map[string]bool)
 	var add func(t *PTask)
 	add = func(t *PTask) {
@@ -102,4 +112,82 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 
 	plan.Links = make([]Link, 0)
 	return plan
+}
+
+func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	tasks, ok := s.tasks[projPhid]
+	if !ok {
+		return "", fmt.Errorf("No such project: %q", projPhid)
+	}
+
+	ptask, ok := tasks[task.Id]
+
+	// New task
+	if !ok {
+		req := EditRequest{}
+		req.SetProject(projPhid)
+		if task.Parent != "0" {
+			req.SetParent(task.Parent)
+		}
+		req.SetColumn(task.Column)
+		req.SetTitle(task.Text)
+
+		md := PTaskMetadata{}
+		md.Unscheduled = task.Unscheduled
+		md.StartDate = task.StartDate
+		md.Duration = task.Duration
+		req.SetPTaskMetadata(&md)
+
+		return s.phab.EditTask(&req)
+	}
+
+	// Edit task
+	numEds := 0
+	req := EditRequest{}
+	req.SetObjectId(task.Id)
+	if ptask.Task.Column != task.Column {
+		req.SetColumn(task.Column)
+		numEds++
+	}
+
+	if ptask.Task.Text != task.Text {
+		req.SetTitle(task.Text)
+		numEds++
+	}
+
+	if ptask.Task.Parent != "" && ptask.Task.Parent != task.Parent {
+		if task.Parent == "0" {
+			req.RemoveParent()
+		} else {
+			req.SetParent(task.Parent)
+		}
+		numEds++
+	}
+
+	md := PTaskMetadata{}
+	if ptask.Task.Unscheduled != task.Unscheduled {
+		md.Unscheduled = task.Unscheduled
+		numEds++
+	}
+
+	if ptask.Task.StartDate != task.StartDate {
+		md.StartDate = task.StartDate
+		numEds++
+	}
+
+	if ptask.Task.Duration != task.Duration {
+		md.Duration = task.Duration
+		numEds++
+	}
+
+	req.SetPTaskMetadata(&md)
+
+	if numEds > 0 {
+		return s.phab.EditTask(&req)
+	}
+
+	return task.Id, nil
 }

@@ -20,9 +20,11 @@
 package pgantt
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thought-machine/gonduit"
@@ -36,9 +38,65 @@ type Phabricator struct {
 	endpoint string
 }
 
+type PTaskMetadata struct {
+	StartDate   string `json:"start_date,omitempty"`
+	Duration    string `json:"duration,omitempty"`
+	Unscheduled bool   `json:"unscheduled,omitempty"`
+}
+
 type PTask struct {
 	Mtime uint64
 	Task  Task
+}
+
+type Transaction struct {
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
+}
+
+type EditRequest struct {
+	requests.Request
+	ObjectIdentifier string        `json:"objectIdentifier,omitempty"`
+	Transactions     []Transaction `json:"transactions"`
+}
+
+type EditResponse struct {
+	Object struct {
+		Phid string `json:"phid"`
+	} `json:"object"`
+}
+
+func (r *EditRequest) SetObjectId(phid string) {
+	r.ObjectIdentifier = phid
+}
+
+func (r *EditRequest) SetParent(phid string) {
+	if r.ObjectIdentifier == "" {
+		r.Transactions = append(r.Transactions, Transaction{"parent", phid})
+	} else {
+		r.Transactions = append(r.Transactions, Transaction{"parents.set", []string{phid}})
+	}
+}
+
+func (r *EditRequest) RemoveParent() {
+	r.Transactions = append(r.Transactions, Transaction{"parents.set", []string{}})
+}
+
+func (r *EditRequest) SetProject(phid string) {
+	r.Transactions = append(r.Transactions, Transaction{"projects.set", []string{phid}})
+}
+
+func (r *EditRequest) SetColumn(phid string) {
+	r.Transactions = append(r.Transactions, Transaction{"column", []string{phid}})
+}
+
+func (r *EditRequest) SetTitle(title string) {
+	r.Transactions = append(r.Transactions, Transaction{"title", title})
+}
+
+func (r *EditRequest) SetPTaskMetadata(md *PTaskMetadata) {
+	bytes, _ := json.Marshal(md)
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.pgantt", string(bytes)})
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {
@@ -143,7 +201,7 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 			}
 
 			if update {
-				log.Debugf("Updating task %q", taskPhid)
+				log.Debugf("Updating cached task %q", taskPhid)
 				ptask := &PTask{}
 				tasks[taskPhid] = ptask
 				ptask.Mtime = mtime
@@ -153,7 +211,6 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				col := el.Attachments["columns"]["boards"].(map[string]interface{})[phid].(map[string]interface{})["columns"].([]interface{})[0].(map[string]interface{})
 				ptask.Task.Column = col["phid"].(string)
 				ptask.Task.Url = fmt.Sprintf("%sT%d", p.endpoint, el.ID)
-				ptask.Task.Unscheduled = true
 
 				// Find out who the parent is
 				req := requests.SearchRequest{
@@ -161,6 +218,27 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 						"projects":   []string{phid},
 						"subtaskIDs": []int{el.ID},
 					},
+				}
+
+				md := &PTaskMetadata{}
+				if _, ok := el.Fields["custom.daedalean.pgantt"]; ok && el.Fields["custom.daedalean.pgantt"] != nil {
+					if data, ok := el.Fields["custom.daedalean.pgantt"].(string); ok {
+						if err := json.Unmarshal([]byte(data), &md); err != nil {
+							log.Errorf("Unable to unmarshal PGantt metadata for task %q (%q): %s", taskPhid, data, err)
+						}
+					}
+				}
+				ptask.Task.Unscheduled = md.Unscheduled
+				ptask.Task.Duration = md.Duration
+				ptask.Task.StartDate = md.StartDate
+
+				if ptask.Task.StartDate == "" {
+					ptask.Task.Unscheduled = true
+					ptask.Task.StartDate = time.Now().Format("2006-01-02 15:04")
+				}
+				if ptask.Task.StartDate == "" {
+					ptask.Task.Unscheduled = true
+					ptask.Task.Duration = "1"
 				}
 
 				var res responses.SearchResponse
@@ -186,12 +264,34 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 	return tasks, nil
 }
 
+func (p *Phabricator) EditTask(req *EditRequest) (string, error) {
+	if req.ObjectIdentifier == "" {
+		for _, tr := range req.Transactions {
+			if tr.Type == "title" {
+				log.Debugf("Creating new task with title: %q", tr.Value)
+				break
+			}
+		}
+	} else {
+		log.Debugf("Editing task: %q, transactions: %+v", req.ObjectIdentifier, req.Transactions)
+	}
+	res := EditResponse{}
+	if err := p.c.Call("maniphest.edit", req, &res); err != nil {
+		return "", err
+	}
+	log.Debugf("Task %q edited", res.Object.Phid)
+	return res.Object.Phid, nil
+}
+
 func NewPhabricator(endpoint, key string) (*Phabricator, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
 	}
-	conn, err := gonduit.Dial(endpoint, &core.ClientOptions{APIToken: key})
+
+	conn, err := gonduit.Dial(endpoint, &core.ClientOptions{
+		APIToken: key,
+	})
 	if err != nil {
 		return nil, err
 	}
