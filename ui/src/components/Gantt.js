@@ -24,8 +24,10 @@ import moment from 'moment';
 import { connect } from 'react-redux';
 
 import { planSet } from '../actions/planning';
-import { planGet } from '../utils/api';
-import { objectEquals } from '../utils/helpers';
+import {
+  planGet, taskCreate, taskEdit, taskDelete, linkCreate, linkEdit, linkDelete
+} from '../utils/api';
+import { objectEquals, sanitizeTask } from '../utils/helpers';
 
 class Gantt extends Component {
   fetchData = (phid) => {
@@ -44,7 +46,8 @@ class Gantt extends Component {
         time_disable_button: "Unschedule",
         section_details: "Details",
         section_title: "Title",
-        section_column: "Column"
+        section_column: "Column",
+        section_parent: "Parent"
       }
     });
 
@@ -55,25 +58,71 @@ class Gantt extends Component {
     const fields = [
       {name: "title", height: 70, map_to: "text", type: "textarea", focus: true},
       {name: "details", height: 16, type: "template", map_to: "details"},
+      {name: "parent", type: "parent", allow_root: "true", root_label: "No parent"},
       {name: "column", height:22, map_to: "column", type: "select", options: columns},
       {name: "time", map_to: "auto", button: true, type: "duration_optional"}
     ];
 
     gantt.config.lightbox.sections = fields;
+    gantt.config.lightbox.project_sections = fields;
     gantt.config.lightbox.milestone_sections = fields;
 
-    gantt.attachEvent("onLightboxSave", function (id, task, is_new) {
+    gantt.attachEvent("onLightboxSave", (id, task, is_new) => {
       task.unscheduled = !task.start_date;
       return true;
     });
 
-    gantt.attachEvent("onBeforeLightbox", function (id) {
+    gantt.attachEvent("onBeforeLightbox", (id) => {
       var task = gantt.getTask(id);
       task.details = `<b>URL:</b> <a href="${task.url}">${task.url}</a>`;
       return true;
     });
 
-    gantt.parse(this.props.plan);
+    gantt.config.auto_types = true;
+
+    const logError = err => {
+      message.error(err.message);
+      throw err;
+    };
+
+    let dp = gantt.createDataProcessor({
+      task: {
+        create: (data) => {
+          return taskCreate(this.props.phid, sanitizeTask(data))
+            .catch(logError);
+        },
+        update: (data, id) => {
+          return taskEdit(this.props.phid, sanitizeTask(data))
+            .catch(logError);
+        },
+        delete: (id) => {
+          return taskDelete(this.props.phid, id)
+            .catch(logError);
+        }
+      },
+      link: {
+        create: (data) => {
+          return linkCreate(this.props.phid, data)
+            .catch(logError);
+        },
+        update: (data, id) => {
+          return linkEdit(this.props.phid, data)
+            .catch(logError);
+        },
+        delete: (id) => {
+          return linkDelete(this.props.phid, id)
+            .catch(logError);
+        }
+      }
+    });
+
+    dp.attachEvent("onAfterUpdate", (id, action, tid, response) => {
+      if(action == "error") {
+        gantt.clearAll();
+        gantt.parse(this.props.plan);
+      }
+    });
+
     this.fetchData(this.props.phid);
     this.initGanttDataProcessor();
     setInterval(() => this.fetchData(this.props.phid), 1000);

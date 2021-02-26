@@ -36,3 +36,14 @@ export function objectEquals(x, y) {
 
   return true;
 }
+
+export function sanitizeTask(task) {
+  task.id = task.id.toString();
+  task.duration = task.duration.toString();
+  task.parent = task.parent.toString();
+  return task;
+}
+
+export function extractData(data) {
+  return data.data;
+}

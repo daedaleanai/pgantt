@@ -17,6 +17,8 @@
 // along with PGantt.  If not, see <https://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 
+import { extractData } from './helpers';
+
 const loc = window.location;
 const api = process.env.NODE_ENV === 'production'
   ? `${loc.protocol}//${loc.host}/api`
@@ -28,7 +30,12 @@ const headers = {
 
 const responseHandler = (response) => {
   if(!response.ok) {
-    throw Error(response.error);
+    if (response.error) {
+      throw Error(response.error);
+    }
+    return response.json().then(body => {
+      throw Error(body.data);
+    });
   }
   return response.json();
 };
@@ -43,4 +50,63 @@ export const planGet = (phid, closed) => {
   const url = `${api}/plan/${phid}?closed=${closed}`;
   return fetch(url, { headers })
     .then(responseHandler);
+};
+
+export const taskCreate = (phid, data) => {
+  const url = `${api}/edit/${phid}/task`;
+  return fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data)
+  })
+    .then(responseHandler)
+    .then(extractData);
+};
+
+export const taskEdit = (phid, data) => {
+  const url = `${api}/edit/${phid}/task`;
+  return fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(data)
+  })
+    .then(responseHandler)
+    .then(extractData);
+};
+
+export const taskDelete = (phid, id) => {
+  return Promise.reject(new Error("You cannot delete tasks."));
+};
+
+export const linkCreate = (phid, data) => {
+  const url = `${api}/edit/${phid}/link`;
+  return fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data)
+  })
+    .then(responseHandler)
+    .then(extractData);
+};
+
+export const linkEdit = (phid, data) => {
+  const url = `${api}/edit/${phid}/link`;
+  return fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(data)
+  })
+    .then(responseHandler)
+    .then(extractData);
+};
+
+export const linkDelete = (phid, id) => {
+  const url = `${api}/edit/${phid}/link`;
+  return fetch(url, {
+    method: "DELETE",
+    headers,
+    body: JSON.stringify({id})
+  })
+    .then(responseHandler)
+    .then(extractData);
 };
