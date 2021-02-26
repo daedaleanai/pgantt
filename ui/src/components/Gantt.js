@@ -67,6 +67,11 @@ class Gantt extends Component {
     gantt.config.lightbox.project_sections = fields;
     gantt.config.lightbox.milestone_sections = fields;
 
+    gantt.config.columns = [
+      {name: "text", tree: true, width: '*', resize: true},
+      {name: "add", label: "" },
+    ];
+
     gantt.attachEvent("onLightboxSave", (id, task, is_new) => {
       task.unscheduled = !task.start_date;
       return true;
@@ -123,6 +128,8 @@ class Gantt extends Component {
       }
     });
 
+    gantt.config.buttons_left = [];
+    gantt.config.buttons_right = ["gantt_cancel_btn", "gantt_save_btn"];
     this.fetchData(this.props.phid);
     this.initGanttDataProcessor();
     setInterval(() => this.fetchData(this.props.phid), 1000);
