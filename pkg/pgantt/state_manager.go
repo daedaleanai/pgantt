@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -134,6 +135,10 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	}
 
 	ptask, ok := tasks[task.Id]
+	tm, err := time.Parse("2006-01-02", task.StartDate)
+	if err != nil {
+		return "", fmt.Errorf("Malformed start date: %s", err)
+	}
 
 	// New task
 	if !ok {
@@ -145,11 +150,10 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		req.SetColumn(task.Column)
 		req.SetTitle(task.Text)
 
-		md := PTaskMetadata{}
-		md.Unscheduled = task.Unscheduled
-		md.StartDate = task.StartDate
-		md.Duration = task.Duration
-		req.SetPTaskMetadata(&md)
+		req.SetScheduled(!task.Unscheduled)
+		req.SetStartDate(tm.Unix())
+		req.SetDuration(task.Duration)
+		req.SetProgress(task.Progress)
 
 		return s.phab.EditTask(&req)
 	}
@@ -177,15 +181,25 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		numEds++
 	}
 
-	md := PTaskMetadata{}
-	md.Unscheduled = task.Unscheduled
-	md.StartDate = task.StartDate
-	md.Duration = task.Duration
-
-	if ptask.Task.Unscheduled != task.Unscheduled || ptask.Task.StartDate != task.StartDate || ptask.Task.Duration != task.Duration {
+	if ptask.Task.Unscheduled != task.Unscheduled {
+		req.SetScheduled(!task.Unscheduled)
 		numEds++
 	}
-	req.SetPTaskMetadata(&md)
+
+	if ptask.Task.StartDate != task.StartDate {
+		req.SetStartDate(tm.Unix())
+		numEds++
+	}
+
+	if ptask.Task.Duration != task.Duration {
+		req.SetDuration(task.Duration)
+		numEds++
+	}
+
+	if ptask.Task.Progress != task.Progress {
+		req.SetProgress(task.Progress)
+		numEds++
+	}
 
 	if numEds > 0 {
 		return s.phab.EditTask(&req)

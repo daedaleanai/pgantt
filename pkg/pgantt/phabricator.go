@@ -20,10 +20,10 @@
 package pgantt
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thought-machine/gonduit"
@@ -36,12 +36,6 @@ type Phabricator struct {
 	c              *gonduit.Conn
 	endpoint       string
 	fieldsVerified bool
-}
-
-type PTaskMetadata struct {
-	StartDate   string `json:"start_date"`
-	Duration    int    `json:"duration"`
-	Unscheduled bool   `json:"unscheduled"`
 }
 
 type PTask struct {
@@ -94,9 +88,20 @@ func (r *EditRequest) SetTitle(title string) {
 	r.Transactions = append(r.Transactions, Transaction{"title", title})
 }
 
-func (r *EditRequest) SetPTaskMetadata(md *PTaskMetadata) {
-	bytes, _ := json.Marshal(md)
-	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.pgantt", string(bytes)})
+func (r *EditRequest) SetStartDate(date int64) {
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.start_date", float64(date)})
+}
+
+func (r *EditRequest) SetScheduled(scheduled bool) {
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.scheduled", scheduled})
+}
+
+func (r *EditRequest) SetDuration(duration int) {
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.duration", float64(duration)})
+}
+
+func (r *EditRequest) SetProgress(progress float32) {
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.progress", float64(int(progress * 100))})
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {
@@ -235,18 +240,27 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				ptask.Task.Column = col["phid"].(string)
 				ptask.Task.Url = fmt.Sprintf("%sT%d", p.endpoint, el.ID)
 
-				md := &PTaskMetadata{}
-				md.Unscheduled = true
-				if _, ok := el.Fields["custom.daedalean.pgantt"]; ok && el.Fields["custom.daedalean.pgantt"] != nil {
-					if data, ok := el.Fields["custom.daedalean.pgantt"].(string); ok {
-						if err := json.Unmarshal([]byte(data), &md); err != nil {
-							log.Errorf("Unable to unmarshal PGantt metadata for task %q (%q): %s", taskPhid, data, err)
-						}
-					}
+				ptask.Task.Unscheduled = true
+				if el.Fields["custom.daedalean.scheduled"] != nil {
+					ptask.Task.Unscheduled = !el.Fields["custom.daedalean.scheduled"].(bool)
 				}
-				ptask.Task.Unscheduled = md.Unscheduled
-				ptask.Task.Duration = md.Duration
-				ptask.Task.StartDate = md.StartDate
+
+				if el.Fields["custom.daedalean.duration"] != nil {
+					ptask.Task.Duration = int(el.Fields["custom.daedalean.duration"].(float64))
+				} else {
+					ptask.Task.Unscheduled = true
+				}
+
+				if el.Fields["custom.daedalean.progress"] != nil {
+					ptask.Task.Progress = float32(el.Fields["custom.daedalean.progress"].(float64) / 100)
+				}
+
+				if el.Fields["custom.daedalean.start_date"] != nil {
+					tm := time.Unix(int64(el.Fields["custom.daedalean.start_date"].(float64)), 0)
+					ptask.Task.StartDate = tm.Format("2006-01-02")
+				} else {
+					ptask.Task.Unscheduled = true
+				}
 
 				// Find out who the parent is
 				req := requests.SearchRequest{
