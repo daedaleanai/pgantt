@@ -57,12 +57,14 @@ func writeError(w http.ResponseWriter, code int, err error) {
 		"ERROR",
 		err.Error(),
 	}
+	log.Errorf("Writing an error message to the client: %s:", err)
 
 	bytes, err := json.Marshal(resp)
 	if err != nil {
 		log.Errorf("Cannot serialize error respense: %s", err)
 		return
 	}
+
 	setupHeader(w)
 	w.WriteHeader(code)
 	w.Write(bytes)
