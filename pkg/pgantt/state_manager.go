@@ -178,21 +178,13 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	}
 
 	md := PTaskMetadata{}
-	if ptask.Task.Unscheduled != task.Unscheduled {
-		md.Unscheduled = task.Unscheduled
+	md.Unscheduled = task.Unscheduled
+	md.StartDate = task.StartDate
+	md.Duration = task.Duration
+
+	if ptask.Task.Unscheduled != task.Unscheduled || ptask.Task.StartDate != task.StartDate || ptask.Task.Duration != task.Duration {
 		numEds++
 	}
-
-	if ptask.Task.StartDate != task.StartDate {
-		md.StartDate = task.StartDate
-		numEds++
-	}
-
-	if ptask.Task.Duration != task.Duration {
-		md.Duration = task.Duration
-		numEds++
-	}
-
 	req.SetPTaskMetadata(&md)
 
 	if numEds > 0 {
