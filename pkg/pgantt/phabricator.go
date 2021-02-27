@@ -158,22 +158,6 @@ func (p *Phabricator) ProjectByName(name string) (*Project, error) {
 	return &proj, nil
 }
 
-func (p *Phabricator) getProjectPhid(name string) (string, error) {
-	req := requests.ProjectQueryRequest{Names: []string{"Platforms"}}
-	res, err := p.c.ProjectQuery(req)
-	if err != nil {
-		return "", err
-	}
-
-	keys := reflect.ValueOf(res.Data).MapKeys()
-
-	if len(keys) == 0 {
-		return "", fmt.Errorf("Project not found: %s", name)
-	}
-
-	return keys[0].Interface().(string), err
-}
-
 func (p *Phabricator) verifyCustomFields(fields map[string]interface{}) {
 	if p.fieldsVerified {
 		return
