@@ -33,8 +33,9 @@ import (
 )
 
 type Phabricator struct {
-	c        *gonduit.Conn
-	endpoint string
+	c              *gonduit.Conn
+	endpoint       string
+	fieldsVerified bool
 }
 
 type PTaskMetadata struct {
@@ -168,6 +169,28 @@ func (p *Phabricator) getProjectPhid(name string) (string, error) {
 	return keys[0].Interface().(string), err
 }
 
+func (p *Phabricator) verifyCustomFields(fields map[string]interface{}) {
+	if p.fieldsVerified {
+		return
+	}
+
+	fieldNames := []string{
+		"custom.daedalean.scheduled",
+		"custom.daedalean.start_date",
+		"custom.daedalean.duration",
+		"custom.daedalean.progress",
+		"custom.daedalean.type",
+		"custom.daedalean.successors",
+	}
+	for _, name := range fieldNames {
+		if _, ok := fields[name]; !ok {
+			log.Fatalf("Task field %q missing. Please go to " +
+				"https://github.com/daedaleanai/pgantt for instructions on how" +
+				"to configure Phabricator")
+		}
+	}
+}
+
 func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) (map[string]*PTask, error) {
 	if tasks == nil {
 		tasks = make(map[string]*PTask)
@@ -190,6 +213,7 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 		}
 
 		for _, el := range res.Data {
+			p.verifyCustomFields(el.Fields)
 			taskPhid := el.PHID
 			mtime := uint64(el.Fields["dateModified"].(float64))
 			update := false
@@ -284,5 +308,5 @@ func NewPhabricator(endpoint, key string) (*Phabricator, error) {
 		return nil, err
 	}
 
-	return &Phabricator{conn, u.String()}, nil
+	return &Phabricator{conn, u.String(), false}, nil
 }
