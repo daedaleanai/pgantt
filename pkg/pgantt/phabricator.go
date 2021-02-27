@@ -39,9 +39,9 @@ type Phabricator struct {
 }
 
 type PTaskMetadata struct {
-	StartDate   string `json:"start_date,omitempty"`
-	Duration    string `json:"duration,omitempty"`
-	Unscheduled bool   `json:"unscheduled,omitempty"`
+	StartDate   string `json:"start_date"`
+	Duration    int    `json:"duration"`
+	Unscheduled bool   `json:"unscheduled"`
 }
 
 type PTask struct {

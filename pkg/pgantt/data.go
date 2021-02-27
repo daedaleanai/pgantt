@@ -32,11 +32,11 @@ type Project struct {
 
 type Task struct {
 	Id          string  `json:"id"`
-	Parent      string  `json:"parent,omitempty"`
+	Parent      string  `json:"parent"`
 	Text        string  `json:"text"`
-	Type        string  `json:"type,omitempty"`
-	StartDate   string  `json:"start_date,omitempty"`
-	Duration    string  `json:"duration,omitempty"`
+	Type        string  `json:"type"`
+	StartDate   string  `json:"start_date"`
+	Duration    int     `json:"duration"`
 	Progress    float32 `json:"progress"`
 	Open        bool    `json:"open"`
 	Unscheduled bool    `json:"unscheduled"`
