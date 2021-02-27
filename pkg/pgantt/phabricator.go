@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thought-machine/gonduit"
@@ -212,15 +211,8 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				ptask.Task.Column = col["phid"].(string)
 				ptask.Task.Url = fmt.Sprintf("%sT%d", p.endpoint, el.ID)
 
-				// Find out who the parent is
-				req := requests.SearchRequest{
-					Constraints: map[string]interface{}{
-						"projects":   []string{phid},
-						"subtaskIDs": []int{el.ID},
-					},
-				}
-
 				md := &PTaskMetadata{}
+				md.Unscheduled = true
 				if _, ok := el.Fields["custom.daedalean.pgantt"]; ok && el.Fields["custom.daedalean.pgantt"] != nil {
 					if data, ok := el.Fields["custom.daedalean.pgantt"].(string); ok {
 						if err := json.Unmarshal([]byte(data), &md); err != nil {
@@ -232,13 +224,12 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				ptask.Task.Duration = md.Duration
 				ptask.Task.StartDate = md.StartDate
 
-				if ptask.Task.StartDate == "" {
-					ptask.Task.Unscheduled = true
-					ptask.Task.StartDate = time.Now().Format("2006-01-02 15:04")
-				}
-				if ptask.Task.StartDate == "" {
-					ptask.Task.Unscheduled = true
-					ptask.Task.Duration = "1"
+				// Find out who the parent is
+				req := requests.SearchRequest{
+					Constraints: map[string]interface{}{
+						"projects":   []string{phid},
+						"subtaskIDs": []int{el.ID},
+					},
 				}
 
 				var res responses.SearchResponse
@@ -246,12 +237,9 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 					return nil, err
 				}
 
-				// No parent
-				if len(res.Data) == 0 {
-					continue
+				if len(res.Data) != 0 {
+					ptask.Task.Parent = res.Data[0].PHID
 				}
-
-				ptask.Task.Parent = res.Data[0].PHID
 			}
 		}
 
