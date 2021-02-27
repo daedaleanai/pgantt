@@ -21,6 +21,7 @@ package pgantt
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -103,10 +104,19 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 			add(tasks[t.Task.Parent])
 		}
 
+		taskMap[t.Task.Id] = true
 		plan.Data = append(plan.Data, t.Task)
 	}
 
-	for _, task := range s.tasks[phid] {
+	taskPhids := make([]string, 0, len(tasks))
+	for phid := range tasks {
+		taskPhids = append(taskPhids, phid)
+	}
+
+	sort.Strings(taskPhids)
+
+	for _, phid := range taskPhids {
+		task := tasks[phid]
 		add(task)
 	}
 
