@@ -38,6 +38,20 @@ class Gantt extends Component {
 
   componentDidMount() {
     gantt.init(this.ganttContainer);
+    gantt.config.date_format = "%Y-%m-%d";
+
+    const dateToStr = gantt.date.date_to_str(gantt.config.date_format);
+    gantt.templates.format_date = (date) => {
+      return dateToStr(date);
+    };
+
+    const strToDate = gantt.date.str_to_date(
+      gantt.config.date_format, gantt.config.server_utc);
+
+    gantt.templates.parse_date = (date) => {
+      return strToDate(date);
+    };
+
     gantt.config.show_tasks_outside_timescale = true;
 
     gantt.i18n.setLocale({
