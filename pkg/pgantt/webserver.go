@@ -113,11 +113,20 @@ func (h PlanEditor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	typ := path.Base(r.URL.Path)
 	phid := path.Dir(r.URL.Path)
+
+	if typ != "task" && typ != "link" {
+		writeError(w, 400, fmt.Errorf("Unsupported %s request for %q", r.Method, typ))
+		return
+	}
+
 	defer h.s.SyncTasks()
+	status := ActionStatus{}
+	var err error
+	var id string
 
 	if typ == "task" {
 		var task Task
-		err := json.NewDecoder(r.Body).Decode(&task)
+		err = json.NewDecoder(r.Body).Decode(&task)
 		if err != nil {
 			writeError(w, 400, err)
 			return
@@ -128,25 +137,58 @@ func (h PlanEditor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		id, err := h.s.EditTask(phid, &task)
+		id, err = h.s.EditTask(phid, &task)
+		if err != nil {
+			writeError(w, 400, err)
+			return
+		}
+	}
+
+	if typ == "link" {
+		if r.Method == "DELETE" {
+			var linkId string
+			err = json.NewDecoder(r.Body).Decode(&linkId)
+			if err != nil {
+				writeError(w, 400, err)
+				return
+			}
+
+			err = h.s.DeleteLink(phid, linkId)
+			if err != nil {
+				writeError(w, 400, err)
+				return
+			}
+
+			writeData(w, ActionStatus{"deleted", ""})
+			return
+		}
+
+		var link Link
+		err = json.NewDecoder(r.Body).Decode(&link)
 		if err != nil {
 			writeError(w, 400, err)
 			return
 		}
 
-		status := ActionStatus{}
-		if r.Method == "POST" {
-			status.Action = "inserted"
-			status.Tid = id
-
-		} else {
-			status.Action = "updated"
+		if r.Method == "PUT" {
+			writeError(w, 400, fmt.Errorf("Link edition is not supported"))
+			return
 		}
-		writeData(w, status)
-		return
+
+		id, err = h.s.CreateLink(phid, &link)
+		if err != nil {
+			writeError(w, 400, err)
+			return
+		}
 	}
 
-	writeError(w, 400, fmt.Errorf("Unsupported %s request for %q", r.Method, typ))
+	if r.Method == "POST" {
+		status.Action = "inserted"
+		status.Tid = id
+	} else {
+		status.Action = "updated"
+	}
+	writeData(w, status)
 }
 
 func RunWebServer(sm *StateManager, opts *Opts) {

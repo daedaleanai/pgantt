@@ -207,3 +207,11 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 
 	return task.Id, nil
 }
+
+func (s *StateManager) DeleteLink(phid, id string) error {
+	return fmt.Errorf("Link deletion is not implemented")
+}
+
+func (s *StateManager) CreateLink(phid string, link *Link) (string, error) {
+	return "", fmt.Errorf("Link creation is not implemented")
+}
