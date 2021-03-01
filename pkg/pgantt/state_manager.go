@@ -94,6 +94,9 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 	}
 
 	plan := &PlanningData{}
+	plan.Data = make([]Task, 0)
+	plan.Links = make([]Link, 0)
+
 	taskMap := make(map[string]bool)
 	var add func(t *PTask)
 	add = func(t *PTask) {
@@ -107,6 +110,9 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 
 		taskMap[t.Task.Id] = true
 		plan.Data = append(plan.Data, t.Task)
+		for _, link := range t.Links {
+			plan.Links = append(plan.Links, *link)
+		}
 	}
 
 	taskPhids := make([]string, 0, len(tasks))
@@ -121,7 +127,10 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 		add(task)
 	}
 
-	plan.Links = make([]Link, 0)
+	sort.Slice(plan.Links[:], func(i, j int) bool {
+		return plan.Links[i].Id < plan.Links[j].Id
+	})
+
 	return plan
 }
 
@@ -212,6 +221,61 @@ func (s *StateManager) DeleteLink(phid, id string) error {
 	return fmt.Errorf("Link deletion is not implemented")
 }
 
-func (s *StateManager) CreateLink(phid string, link *Link) (string, error) {
-	return "", fmt.Errorf("Link creation is not implemented")
+func getLinkSlice(links map[string]*Link) []PLinkData {
+	linkIds := make([]string, 0, len(links))
+	for id := range links {
+		linkIds = append(linkIds, id)
+	}
+
+	sort.Strings(linkIds)
+
+	lSlice := make([]PLinkData, 0, len(links))
+	for _, id := range linkIds {
+		lSlice = append(lSlice, PLinkData{
+			Target: links[id].Target,
+			Type:   links[id].Type,
+		})
+	}
+	return lSlice
+}
+
+func generateLinkId(link *Link) string {
+	return fmt.Sprintf("%s#%s#%s", link.Source, link.Target, link.Type)
+}
+
+func (s *StateManager) CreateLink(projPhid string, link *Link) (string, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	tasks, ok := s.tasks[projPhid]
+	if !ok {
+		return "", fmt.Errorf("No such project: %q", projPhid)
+	}
+
+	ptask, ok := tasks[link.Source]
+	if !ok {
+		return "", fmt.Errorf("No such source task: %q", link.Source)
+	}
+
+	_, ok = tasks[link.Source]
+	if !ok {
+		return "", fmt.Errorf("No such target task: %q", link.Target)
+	}
+
+	id := generateLinkId(link)
+	link.Id = id
+
+	if _, ok = ptask.Links[id]; ok {
+		return "", fmt.Errorf("Link with ID %q already exists", id)
+	}
+
+	ptask.Links[id] = link
+	linkData := getLinkSlice(ptask.Links)
+	req := EditRequest{}
+	req.SetObjectId(link.Source)
+	req.SetSuccessors(linkData)
+	if _, err := s.phab.EditTask(&req); err != nil {
+		return "", err
+	}
+	return id, nil
 }

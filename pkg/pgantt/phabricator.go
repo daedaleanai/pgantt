@@ -20,6 +20,7 @@
 package pgantt
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -40,7 +41,13 @@ type Phabricator struct {
 
 type PTask struct {
 	Mtime uint64
+	Links map[string]*Link
 	Task  Task
+}
+
+type PLinkData struct {
+	Target string `json:"target"`
+	Type   string `json:"type"`
 }
 
 type Transaction struct {
@@ -102,6 +109,11 @@ func (r *EditRequest) SetDuration(duration int) {
 
 func (r *EditRequest) SetProgress(progress float32) {
 	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.progress", float64(int(progress * 100))})
+}
+
+func (r *EditRequest) SetSuccessors(links []PLinkData) {
+	data, _ := json.Marshal(links)
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.successors", string(data)})
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {
@@ -216,6 +228,7 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				log.Debugf("Updating cached task %q", taskPhid)
 				ptask := &PTask{}
 				tasks[taskPhid] = ptask
+				ptask.Links = make(map[string]*Link)
 				ptask.Mtime = mtime
 				ptask.Task.Id = taskPhid
 				ptask.Task.Text = el.Fields["name"].(string)
@@ -244,6 +257,23 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 					ptask.Task.StartDate = tm.Format("2006-01-02")
 				} else {
 					ptask.Task.Unscheduled = true
+				}
+
+				if el.Fields["custom.daedalean.successors"] != nil {
+					data := el.Fields["custom.daedalean.successors"].(string)
+					linkData := []PLinkData{}
+					if err := json.Unmarshal([]byte(data), &linkData); err != nil {
+						log.Errorf("Cannot unmarshal successors in task %q titled %q: %s", taskPhid, ptask.Task.Text, err)
+					} else {
+						for _, ld := range linkData {
+							link := &Link{}
+							link.Source = taskPhid
+							link.Target = ld.Target
+							link.Type = ld.Type
+							link.Id = generateLinkId(link)
+							ptask.Links[link.Id] = link
+						}
+					}
 				}
 
 				// Find out who the parent is
