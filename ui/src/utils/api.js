@@ -105,7 +105,7 @@ export const linkDelete = (phid, id) => {
   return fetch(url, {
     method: "DELETE",
     headers,
-    body: JSON.stringify({id})
+    body: JSON.stringify(id)
   })
     .then(responseHandler)
     .then(extractData);
