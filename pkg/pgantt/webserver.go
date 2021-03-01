@@ -57,7 +57,7 @@ func writeError(w http.ResponseWriter, code int, err error) {
 		"ERROR",
 		err.Error(),
 	}
-	log.Errorf("Writing an error message to the client: %s:", err)
+	log.Errorf("Writing an error message to the client: %s", err)
 
 	bytes, err := json.Marshal(resp)
 	if err != nil {
