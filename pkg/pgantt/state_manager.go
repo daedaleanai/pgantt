@@ -22,6 +22,7 @@ package pgantt
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -217,8 +218,39 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	return task.Id, nil
 }
 
-func (s *StateManager) DeleteLink(phid, id string) error {
-	return fmt.Errorf("Link deletion is not implemented")
+func (s *StateManager) DeleteLink(projPhid, id string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	tasks, ok := s.tasks[projPhid]
+	if !ok {
+		return fmt.Errorf("No such project: %q", projPhid)
+	}
+
+	fragments := strings.Split(id, "#")
+	if len(fragments) != 3 {
+		return fmt.Errorf("Unable to decode link ID: %s", id)
+	}
+
+	ptask, ok := tasks[fragments[0]]
+	if !ok {
+		return fmt.Errorf("No such source task: %q", fragments[0])
+	}
+
+	if _, ok := ptask.Links[id]; !ok {
+		return fmt.Errorf("No such link: %q", id)
+	}
+
+	delete(ptask.Links, id)
+
+	linkData := getLinkSlice(ptask.Links)
+	req := EditRequest{}
+	req.SetObjectId(fragments[0])
+	req.SetSuccessors(linkData)
+	if _, err := s.phab.EditTask(&req); err != nil {
+		return err
+	}
+	return nil
 }
 
 func getLinkSlice(links map[string]*Link) []PLinkData {
