@@ -43,6 +43,11 @@ export function sanitizeTask(task) {
   return task;
 }
 
+export function sanitizeLink(link) {
+  link.id = link.id.toString();
+  return link;
+}
+
 export function extractData(data) {
   return data.data;
 }

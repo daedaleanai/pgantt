@@ -27,7 +27,7 @@ import { planSet } from '../actions/planning';
 import {
   planGet, taskCreate, taskEdit, taskDelete, linkCreate, linkEdit, linkDelete
 } from '../utils/api';
-import { objectEquals, sanitizeTask } from '../utils/helpers';
+import { objectEquals, sanitizeTask, sanitizeLink } from '../utils/helpers';
 
 class Gantt extends Component {
   fetchData = (phid) => {
@@ -121,11 +121,11 @@ class Gantt extends Component {
       },
       link: {
         create: (data) => {
-          return linkCreate(this.props.phid, data)
+          return linkCreate(this.props.phid, sanitizeLink(data))
             .catch(logError);
         },
         update: (data, id) => {
-          return linkEdit(this.props.phid, data)
+          return linkEdit(this.props.phid, sanitizeLink(data))
             .catch(logError);
         },
         delete: (id) => {
