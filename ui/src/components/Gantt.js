@@ -72,6 +72,7 @@ class Gantt extends Component {
     const fields = [
       {name: "title", height: 70, map_to: "text", type: "textarea", focus: true},
       {name: "details", height: 16, type: "template", map_to: "details"},
+      {name: "type", type: "typeselect", map_to: "type"},
       {name: "parent", type: "parent", allow_root: "true", root_label: "No parent"},
       {name: "column", height:22, map_to: "column", type: "select", options: columns},
       {name: "time", map_to: "auto", button: true, type: "duration_optional"}
@@ -80,6 +81,13 @@ class Gantt extends Component {
     gantt.config.lightbox.sections = fields;
     gantt.config.lightbox.project_sections = fields;
     gantt.config.lightbox.milestone_sections = fields;
+
+    gantt.templates.rightside_text = (start, end, task) => {
+      if (task.type == gantt.config.types.milestone) {
+        return task.text;
+      }
+      return "";
+    };
 
     gantt.config.grid_width = 420;
     gantt.config.row_height = 24;
