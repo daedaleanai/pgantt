@@ -164,6 +164,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		req.SetStartDate(tm.Unix())
 		req.SetDuration(task.Duration)
 		req.SetProgress(task.Progress)
+		req.SetType(task.Type)
 
 		return s.phab.EditTask(&req)
 	}
@@ -208,6 +209,11 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 
 	if ptask.Task.Progress != task.Progress {
 		req.SetProgress(task.Progress)
+		numEds++
+	}
+
+	if ptask.Task.Type != task.Type {
+		req.SetType(task.Type)
 		numEds++
 	}
 

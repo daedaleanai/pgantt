@@ -40,9 +40,10 @@ type Phabricator struct {
 }
 
 type PTask struct {
-	Mtime uint64
-	Links map[string]*Link
-	Task  Task
+	Mtime  uint64
+	IsLeaf bool
+	Links  map[string]*Link
+	Task   Task
 }
 
 type PLinkData struct {
@@ -114,6 +115,16 @@ func (r *EditRequest) SetProgress(progress float32) {
 func (r *EditRequest) SetSuccessors(links []PLinkData) {
 	data, _ := json.Marshal(links)
 	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.successors", string(data)})
+}
+
+func (r *EditRequest) SetType(typ string) {
+	phTyp := "daedalean:task"
+	if typ == "milestone" {
+		phTyp = "daedalean:milestone"
+	} else if typ == "project" {
+		phTyp = "daedalean:project"
+	}
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.type", phTyp})
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {
@@ -228,6 +239,7 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				log.Debugf("Updating cached task %q", taskPhid)
 				ptask := &PTask{}
 				tasks[taskPhid] = ptask
+				ptask.IsLeaf = true
 				ptask.Links = make(map[string]*Link)
 				ptask.Mtime = mtime
 				ptask.Task.Id = taskPhid
@@ -276,6 +288,17 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 					}
 				}
 
+				if el.Fields["custom.daedalean.type"] != nil {
+					val := el.Fields["custom.daedalean.type"].(string)
+					if val == "daedalean:milestone" {
+						ptask.Task.Type = "milestone"
+					} else if val == "daedalean:project" {
+						ptask.Task.Type = "project"
+					} else if val == "daedalean:task" {
+						ptask.Task.Type = "task"
+					}
+				}
+
 				// Find out who the parent is
 				req := requests.SearchRequest{
 					Constraints: map[string]interface{}{
@@ -298,6 +321,22 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 		after = res.Cursor.After
 		if after == "" {
 			break
+		}
+	}
+
+	for _, task := range tasks {
+		if task.Task.Parent != "" {
+			tasks[task.Task.Parent].IsLeaf = false
+		}
+	}
+
+	for _, task := range tasks {
+		if task.Task.Type == "" {
+			if task.IsLeaf {
+				task.Task.Type = "task"
+			} else {
+				task.Task.Type = "project"
+			}
 		}
 	}
 
