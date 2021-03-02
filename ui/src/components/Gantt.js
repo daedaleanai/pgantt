@@ -52,8 +52,6 @@ class Gantt extends Component {
       return strToDate(date);
     };
 
-    gantt.config.show_tasks_outside_timescale = true;
-
     gantt.i18n.setLocale({
       labels:{
         time_enable_button: "Schedule",
@@ -264,10 +262,15 @@ class Gantt extends Component {
       }
     }
 
+    if (this.props.showTasksOutsideTimescale !== nextProps.showTasksOutsideTimescale) {
+      return true;
+    }
+
     return false;
   }
 
   componentDidUpdate() {
+    gantt.config.show_tasks_outside_timescale = this.props.showTasksOutsideTimescale;
     gantt.parse(this.props.plan);
     gantt.render();
   }

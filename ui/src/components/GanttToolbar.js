@@ -26,7 +26,7 @@ const { RangePicker } = DatePicker;
 class GanttToolbar extends Component {
   state = {
     currentZoom: 'Days',
-    showProposed: false,
+    showOutsideTimescale: true,
     showClosed: true
   };
 
@@ -40,10 +40,14 @@ class GanttToolbar extends Component {
     }
   }
 
-  onToggleProposed = e => {
+  onToggleOutsideTimescale = e => {
     this.setState({
-      showProposed: e.target.checked,
+      showOutsideTimescale: e.target.checked,
     });
+
+    if (this.props.onToggleOutsideTimescale)  {
+      this.props.onToggleOutsideTimescale(e.target.checked);
+    }
   };
 
   onToggleClosed = e => {
@@ -80,10 +84,10 @@ class GanttToolbar extends Component {
           extra={[
             <Checkbox
               key="45462ce1-2d60-4f3d-8fa5-265a024724c8"
-              checked={this.state.showProposed}
-              onChange={this.onToggleProposed}
+              checked={this.state.showOutsideTimescale}
+              onChange={this.onToggleOutsideTimescale}
             >
-              Show Proposed Tasks
+              Show Tasks Outside of the Timescale
             </Checkbox>,
             <Checkbox
               key="bbf1de5c-1f5b-415e-b759-d0eac641ca30"
