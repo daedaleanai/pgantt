@@ -79,18 +79,18 @@ export const taskDelete = (phid, id) => {
 };
 
 export const linkCreate = (phid, data) => {
-  return Promise.reject(new Error("You cannot edit links."));
-};
-
-export const linkEdit = (phid, data) => {
   const url = `${api}/edit/${phid}/link`;
   return fetch(url, {
-    method: "PUT",
+    method: "POST",
     headers,
     body: JSON.stringify(data)
   })
     .then(responseHandler)
     .then(extractData);
+};
+
+export const linkEdit = (phid, data) => {
+  return Promise.reject(new Error("You cannot edit links."));
 };
 
 export const linkDelete = (phid, id) => {
