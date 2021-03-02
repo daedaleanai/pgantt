@@ -81,9 +81,13 @@ class Gantt extends Component {
     gantt.config.lightbox.project_sections = fields;
     gantt.config.lightbox.milestone_sections = fields;
 
+    gantt.config.grid_width = 420;
+    gantt.config.row_height = 24;
+    gantt.config.grid_resize = true;
+
     gantt.config.columns = [
       {name: "text", tree: true, width: '*', resize: true},
-      {name: "add", label: "" },
+      {name: "add", width: 40,  },
     ];
 
     gantt.attachEvent("onLightboxSave", (id, task, is_new) => {
