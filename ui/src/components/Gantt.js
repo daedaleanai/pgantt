@@ -38,6 +38,10 @@ class Gantt extends Component {
 
   componentDidMount() {
     gantt.init(this.ganttContainer);
+    gantt.plugins({
+      marker: true
+    });
+
     gantt.config.date_format = "%Y-%m-%d";
 
     const dateToStr = gantt.date.date_to_str(gantt.config.date_format);
@@ -51,6 +55,14 @@ class Gantt extends Component {
     gantt.templates.parse_date = (date) => {
       return strToDate(date);
     };
+
+    var today = new Date();
+    gantt.addMarker({
+      start_date: today,
+      css: "today",
+      text: "Today",
+      title: "Today: " + dateToStr(today)
+    });
 
     gantt.i18n.setLocale({
       labels:{
