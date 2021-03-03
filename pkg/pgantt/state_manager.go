@@ -303,8 +303,10 @@ func (s *StateManager) CreateLink(projPhid string, link *Link) (string, error) {
 	id := generateLinkId(link)
 	link.Id = id
 
+	// This actually happrens because of a bug in the front end. It's fine to assume
+	// success because the ID encapsulates the complete link data
 	if _, ok = ptask.Links[id]; ok {
-		return "", fmt.Errorf("Link with ID %q already exists", id)
+		return id, nil
 	}
 
 	ptask.Links[id] = link
