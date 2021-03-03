@@ -46,3 +46,11 @@ code {
 .gantt_grid div, .gantt_data_area div {
   font-size: 12px;
 }
+
+.weekend {
+  background: #f4f7f4;
+}
+
+.gantt_selected .weekend {
+  background: #f7eb91;
+}

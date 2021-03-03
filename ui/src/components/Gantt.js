@@ -37,7 +37,20 @@ class Gantt extends Component {
   }
 
   componentDidMount() {
-    gantt.init(this.ganttContainer);
+    gantt.templates.scale_cell_class = (date) => {
+      if (date.getDay() == 0 || date.getDay() == 6) {
+        return "weekend";
+      }
+      return null;
+    };
+
+    gantt.templates.timeline_cell_class = (item, date) => {
+      if (date.getDay() == 0 || date.getDay() == 6) {
+        return "weekend";
+      }
+      return null;
+    };
+
     gantt.plugins({
       marker: true
     });
@@ -63,6 +76,8 @@ class Gantt extends Component {
       text: "Today",
       title: "Today: " + dateToStr(today)
     });
+
+    gantt.init(this.ganttContainer);
 
     gantt.i18n.setLocale({
       labels:{
