@@ -29,6 +29,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/thought-machine/gonduit"
 	"github.com/thought-machine/gonduit/core"
+	"github.com/thought-machine/gonduit/entities"
 	"github.com/thought-machine/gonduit/requests"
 	"github.com/thought-machine/gonduit/responses"
 )
@@ -125,6 +126,54 @@ func (r *EditRequest) SetType(typ string) {
 		phTyp = "daedalean:project"
 	}
 	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.type", phTyp})
+}
+
+func (p *Phabricator) MyProjectNames() ([]string, error) {
+	userReq := requests.Request{}
+	var userRes entities.User
+	if err := p.c.Call("user.whoami", &userReq, &userRes); err != nil {
+		return nil, err
+	}
+
+	log.Debugf("User: %s (%s)", userRes.UserName, userRes.RealName)
+
+	projects := []string{}
+	after := ""
+	for {
+		req := requests.SearchRequest{
+			Attachments: map[string]bool{
+				"members": true,
+			},
+			After: after,
+		}
+		var res responses.SearchResponse
+		if err := p.c.Call("project.search", &req, &res); err != nil {
+			return nil, err
+		}
+
+		for _, el := range res.Data {
+			if el.Fields["icon"].(map[string]interface{})["key"].(string) != "project" {
+				continue
+			}
+
+			if membersIface, ok := el.Attachments["members"]["members"]; ok && membersIface != nil {
+				for _, mem := range membersIface.([]interface{}) {
+					if mem.(map[string]interface{})["phid"].(string) == userRes.PHID {
+						name := el.Fields["name"].(string)
+						log.Debugf("Found project: %s", name)
+						projects = append(projects, name)
+					}
+				}
+			}
+		}
+
+		after = res.Cursor.After
+		if after == "" {
+			break
+		}
+	}
+
+	return projects, nil
 }
 
 func (p *Phabricator) ProjectByName(name string) (*Project, error) {

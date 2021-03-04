@@ -47,8 +47,13 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 
 	log.Infof("Created a connection to Phabricator at: %s", opts.PhabricatorUri)
 
+	projects, err := sm.phab.MyProjectNames()
+	if err != nil {
+		return nil, fmt.Errorf("Cannot fetch project names: %s", err)
+	}
+
 	sm.tasks = make(map[string]map[string]*PTask)
-	for _, projName := range opts.Projects {
+	for _, projName := range projects {
 		log.Debugf("Attempting to fetch project info for: %s", projName)
 		proj, err := sm.phab.ProjectByName(projName)
 		if err != nil {
