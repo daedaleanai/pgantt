@@ -95,7 +95,7 @@ func (s *StateManager) Projects() []Project {
 	return s.projects
 }
 
-func (s *StateManager) PlanningData(phid string, includeClosed bool) *PlanningData {
+func (s *StateManager) PlanningData(phid string) *PlanningData {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -135,9 +135,6 @@ func (s *StateManager) PlanningData(phid string, includeClosed bool) *PlanningDa
 
 	for _, phid := range taskPhids {
 		task := tasks[phid]
-		if includeClosed == false && !task.Task.Open {
-			continue
-		}
 		add(task)
 	}
 

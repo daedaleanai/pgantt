@@ -96,12 +96,7 @@ func (h ProjectsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h PlanProvider) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	includeClosed := true
-	if r.URL.Query().Get("closed") == "false" {
-		includeClosed = false
-	}
-
-	planning := h.s.PlanningData(r.URL.Path, includeClosed)
+	planning := h.s.PlanningData(r.URL.Path)
 	if planning == nil {
 		writeError(w, 404, fmt.Errorf("Unknown project %s", r.URL.Path))
 		return
