@@ -186,6 +186,11 @@ class Gantt extends Component {
       if (!this.props.showTasksClosed && !task.open) {
         return false;
       }
+
+      if (!this.props.showTasksUnscheduled && task.unscheduled) {
+        return false;
+      }
+
       return true;
     });
     gantt.config.buttons_left = [];
@@ -324,18 +329,22 @@ class Gantt extends Component {
       return true;
     }
 
+    if (this.props.showTasksUnscheduled !== nextProps.showTasksUnscheduled) {
+      return true;
+    }
+
     return false;
   }
 
   componentDidUpdate() {
     gantt.config.show_tasks_outside_timescale = this.props.showTasksOutsideTimescale;
-    gantt.parse(this.props.plan);
     gantt.silent(() => {
       this.tasksToRemove.forEach((id, index) => gantt.deleteTask(id));
       this.linksToRemove.forEach((id, index) => gantt.deleteLink(id));
       this.tasksToRemove = [];
       this.linksToRemove = [];
     });
+    gantt.parse(this.props.plan);
     gantt.refreshData();
     gantt.render();
   }

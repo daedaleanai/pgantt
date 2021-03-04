@@ -27,7 +27,8 @@ class GanttToolbar extends Component {
   state = {
     currentZoom: 'Days',
     showOutsideTimescale: true,
-    showClosed: false
+    showClosed: false,
+    showUnscheduled: false
   };
 
   handleZoomChange = (e) => {
@@ -57,6 +58,16 @@ class GanttToolbar extends Component {
 
     if (this.props.onToggleClosed)  {
       this.props.onToggleClosed(e.target.checked);
+    }
+  };
+
+  onToggleUnscheduled = e => {
+    this.setState({
+      showUnscheduled: e.target.checked,
+    });
+
+    if (this.props.onToggleUnscheduled)  {
+      this.props.onToggleUnscheduled(e.target.checked);
     }
   };
 
@@ -93,6 +104,14 @@ class GanttToolbar extends Component {
             >
               Show Tasks Outside of the Timescale
             </Checkbox>,
+            <Checkbox
+              key="e0b1a9db-14a1-4b10-81ce-45f0d454895a"
+              checked={this.state.showUnscheduled}
+              onChange={this.onToggleUnscheduled}
+            >
+              Show Unscheduled Tasks
+            </Checkbox>,
+
             <Checkbox
               key="bbf1de5c-1f5b-415e-b759-d0eac641ca30"
               checked={this.state.showClosed}
