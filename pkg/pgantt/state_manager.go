@@ -45,11 +45,12 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 		return nil, fmt.Errorf("Cannot make a connection to Phabricator: %s", err)
 	}
 
-	log.Infof("Created a connection to Phabricator at: %s", opts.PhabricatorUri)
-
-	projects, err := sm.phab.MyProjectNames()
-	if err != nil {
-		return nil, fmt.Errorf("Cannot fetch project names: %s", err)
+	projects := opts.PGantt.Projects
+	if len(projects) == 0 {
+		projects, err = sm.phab.MyProjectNames()
+		if err != nil {
+			return nil, fmt.Errorf("Cannot fetch project names: %s", err)
+		}
 	}
 
 	sm.tasks = make(map[string]map[string]*PTask)
@@ -70,7 +71,7 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 
 	go func() {
 		for {
-			time.Sleep(time.Duration(opts.PollInterval) * time.Second)
+			time.Sleep(time.Duration(opts.PGantt.PollInterval) * time.Second)
 			if err := sm.SyncTasks(); err != nil {
 				log.Errorf("Failed to sync tasks: %s", err)
 			}

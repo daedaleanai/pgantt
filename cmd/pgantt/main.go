@@ -59,7 +59,7 @@ func main() {
 		log.Fatalf("Cannot get user info for current user: %s", err)
 	}
 
-	configFile := path.Join(usr.HomeDir, ".pgantt")
+	configFile := path.Join(usr.HomeDir, ".arcrc")
 	opts := pgantt.NewOpts()
 	err = opts.LoadYaml(configFile)
 	if err != nil {

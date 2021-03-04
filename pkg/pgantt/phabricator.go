@@ -417,12 +417,20 @@ func NewPhabricator(endpoint, key string) (*Phabricator, error) {
 		return nil, err
 	}
 
-	conn, err := gonduit.Dial(endpoint, &core.ClientOptions{
+	endpointUri := u.Scheme + "://" + u.Host
+	if u.Port() != "" {
+		endpointUri += ":" + u.Port()
+	}
+
+	log.Debugf("Attempting to connect to Phabricator at %q", endpointUri)
+
+	conn, err := gonduit.Dial(endpointUri, &core.ClientOptions{
 		APIToken: key,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &Phabricator{conn, u.String(), false}, nil
+	log.Debugf("Created connection to Phabricator at %q", endpointUri)
+	return &Phabricator{conn, endpointUri, false}, nil
 }

@@ -198,7 +198,7 @@ func RunWebServer(sm *StateManager, opts *Opts) {
 	http.Handle("/api/projects", ProjectsHandler{sm})
 	http.Handle("/api/plan/", http.StripPrefix("/api/plan/", PlanProvider{sm}))
 	http.Handle("/api/edit/", http.StripPrefix("/api/edit/", PlanEditor{sm}))
-	addressString := fmt.Sprintf("localhost:%d", opts.Port)
+	addressString := fmt.Sprintf("localhost:%d", opts.PGantt.Port)
 	log.Infof("Serving at: http://%s", addressString)
 	log.Fatal("Server failure: ", http.ListenAndServe(addressString, nil))
 }

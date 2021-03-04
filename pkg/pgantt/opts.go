@@ -22,22 +22,33 @@ package pgantt
 import (
 	"fmt"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/ghodss/yaml"
 )
 
+type HostOpts struct {
+	Token string `json:"token"`
+}
+
+type PGanttOpts struct {
+	Port         int      `json:"port"`          // Port to serve the on
+	Projects     []string `json:"projects"`      // List of projects to be handled
+	PollInterval int      `json:"poll_interval"` // How often to pool Phabricator for changes in seconds
+}
+
 type Opts struct {
-	Port           int      // Port to serve the on
-	PhabricatorUri string   // Rendez-vous point with phabricator
-	ApiKey         string   // Phabricator API key
-	Projects       []string // List of projects to be handled
-	PollInterval   int      // How often to pool Phabricator for changes in seconds
+	Hosts          map[string]HostOpts `json:"hosts"`
+	PGantt         PGanttOpts          `json:"pgantt"`
+	PhabricatorUri string
+	ApiKey         string
 }
 
 func NewOpts() (opts *Opts) {
 	opts = new(Opts)
-	opts.Port = 9999
-	opts.PollInterval = 5
+	opts.PGantt.Port = 9999
+	opts.PGantt.PollInterval = 10
+	opts.PGantt.Projects = []string{}
 	return
 }
 
@@ -52,6 +63,20 @@ func (opts *Opts) LoadYaml(fileName string) error {
 	if err != nil {
 		return fmt.Errorf("Malformed config %s: %s", fileName, err)
 	}
+
+	hosts := reflect.ValueOf(opts.Hosts).MapKeys()
+	if len(hosts) == 0 {
+		return fmt.Errorf("No host definitions found in %s", fileName)
+	}
+
+	host := hosts[0].Interface().(string)
+	token := opts.Hosts[host].Token
+	if token == "" {
+		return fmt.Errorf("Token for host %q missing in %s", host, fileName)
+	}
+
+	opts.PhabricatorUri = host
+	opts.ApiKey = token
 
 	return nil
 }
