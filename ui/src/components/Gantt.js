@@ -30,8 +30,11 @@ import {
 import { objectEquals, sanitizeTask, sanitizeLink } from '../utils/helpers';
 
 class Gantt extends Component {
+  tasksToRemove = [];
+  linksToRemove = [];
+
   fetchData = (phid) => {
-    planGet(phid, true)
+    return planGet(phid, true)
       .then(data => this.props.planSet(data.data))
       .catch(msg => message.error(msg.toString()));
   }
@@ -269,14 +272,32 @@ class Gantt extends Component {
       return true;
     }
 
+    const newTaskIds = new Set(nextProps.plan.data.map(item => item.id));
+    this.tasksToRemove = this.props.plan.data
+      .map(item => item.id)
+      .filter(item => !newTaskIds.has(item));
+
+    if (this.tasksToRemove.length !== 0) {
+      return true;
+    }
+
     if (this.props.plan.data.length !== nextProps.plan.data.length) {
       return true;
     }
 
     for (var i = 0; i < this.props.plan.data.length; i++) {
       if (!objectEquals(this.props.plan.data[i], nextProps.plan.data[i])) {
-        return false;
+        return true;
       }
+    }
+
+    const newLinkIds = new Set(nextProps.plan.links.map(item => item.id));
+    this.linksToRemove = this.props.plan.links
+      .map(item => item.id)
+      .filter(item => !newLinkIds.has(item));
+
+    if (this.linksToRemove.length !== 0) {
+      return true;
     }
 
     if (this.props.plan.links.length !== nextProps.plan.links.length) {
@@ -285,7 +306,7 @@ class Gantt extends Component {
 
     for (i = 0; i < this.props.plan.links.length; i++) {
       if (!objectEquals(this.props.plan.links[i], nextProps.plan.links[i])) {
-        return false;
+        return true;
       }
     }
 
@@ -299,6 +320,13 @@ class Gantt extends Component {
   componentDidUpdate() {
     gantt.config.show_tasks_outside_timescale = this.props.showTasksOutsideTimescale;
     gantt.parse(this.props.plan);
+    gantt.silent(() => {
+      this.tasksToRemove.forEach((id, index) => gantt.deleteTask(id));
+      this.linksToRemove.forEach((id, index) => gantt.deleteLink(id));
+      this.tasksToRemove = [];
+      this.linksToRemove = [];
+    });
+    gantt.refreshData();
     gantt.render();
   }
 
