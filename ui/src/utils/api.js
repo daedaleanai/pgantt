@@ -46,8 +46,8 @@ export const projectsGet = () => {
     .then(responseHandler);
 };
 
-export const planGet = (phid, closed) => {
-  const url = `${api}/plan/${phid}?closed=${closed}`;
+export const planGet = (phid) => {
+  const url = `${api}/plan/${phid}`;
   return fetch(url, { headers })
     .then(responseHandler);
 };

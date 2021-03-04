@@ -34,7 +34,7 @@ class Gantt extends Component {
   linksToRemove = [];
 
   fetchData = (phid) => {
-    return planGet(phid, true)
+    return planGet(phid)
       .then(data => this.props.planSet(data.data))
       .catch(msg => message.error(msg.toString()));
   }
