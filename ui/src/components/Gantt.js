@@ -182,6 +182,12 @@ class Gantt extends Component {
       }
     });
 
+    gantt.attachEvent("onBeforeTaskDisplay", (id, task) => {
+      if (!this.props.showTasksClosed && !task.open) {
+        return false;
+      }
+      return true;
+    });
     gantt.config.buttons_left = [];
     gantt.config.buttons_right = ["gantt_cancel_btn", "gantt_save_btn"];
     this.fetchData(this.props.phid);
@@ -311,6 +317,10 @@ class Gantt extends Component {
     }
 
     if (this.props.showTasksOutsideTimescale !== nextProps.showTasksOutsideTimescale) {
+      return true;
+    }
+
+    if (this.props.showTasksClosed !== nextProps.showTasksClosed) {
       return true;
     }
 

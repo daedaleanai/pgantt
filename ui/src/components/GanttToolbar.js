@@ -27,7 +27,7 @@ class GanttToolbar extends Component {
   state = {
     currentZoom: 'Days',
     showOutsideTimescale: true,
-    showClosed: true
+    showClosed: false
   };
 
   handleZoomChange = (e) => {
@@ -54,6 +54,10 @@ class GanttToolbar extends Component {
     this.setState({
       showClosed: e.target.checked,
     });
+
+    if (this.props.onToggleClosed)  {
+      this.props.onToggleClosed(e.target.checked);
+    }
   };
 
   onRangeChange = (date, dateString) => {

@@ -29,7 +29,8 @@ class ProjectView extends Component {
     startDate: null,
     endDate: null,
     currentZoom: "Days",
-    showTasksOutsideTimescale: true
+    showTasksOutsideTimescale: true,
+    showTasksClosed: false
   };
 
   handleZoomChange = (zoom) => {
@@ -41,6 +42,12 @@ class ProjectView extends Component {
   handleToggleOutsideTimescale = (show) => {
     this.setState({
       showTasksOutsideTimescale: show
+    });
+  }
+
+  handleToggleClosed = (show) => {
+    this.setState({
+      showTasksClosed: show
     });
   }
 
@@ -57,6 +64,7 @@ class ProjectView extends Component {
     }
 
     const { currentZoom, startDate, endDate, showTasksOutsideTimescale } = this.state;
+    const { showTasksClosed } = this.state;
 
     return (
       <div className="row content">
@@ -68,6 +76,7 @@ class ProjectView extends Component {
             onZoomChange={this.handleZoomChange}
             onRangeChange={this.handleRangeChange}
             onToggleOutsideTimescale={this.handleToggleOutsideTimescale}
+            onToggleClosed={this.handleToggleClosed}
           />
         </div>
         <div className="row content">
@@ -77,6 +86,7 @@ class ProjectView extends Component {
             startDate={startDate}
             endDate={endDate}
             showTasksOutsideTimescale={showTasksOutsideTimescale}
+            showTasksClosed={showTasksClosed}
           />
         </div></div>
         </div>
