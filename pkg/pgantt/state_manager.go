@@ -161,9 +161,14 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	}
 
 	ptask, ok := tasks[task.Id]
-	tm, err := time.Parse("2006-01-02", task.StartDate)
-	if err != nil {
-		return "", fmt.Errorf("Malformed start date: %s", err)
+
+	var tm time.Time
+	var err error
+	if task.StartDate != "" {
+		tm, err = time.Parse("2006-01-02", task.StartDate)
+		if err != nil {
+			return "", fmt.Errorf("Malformed start date: %s", err)
+		}
 	}
 
 	// New task
@@ -214,7 +219,11 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	}
 
 	if ptask.Task.StartDate != task.StartDate {
-		req.SetStartDate(tm.Unix())
+		if task.StartDate == "" {
+			req.RemoveStartDate()
+		} else {
+			req.SetStartDate(tm.Unix())
+		}
 		numEds++
 	}
 

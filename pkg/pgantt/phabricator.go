@@ -101,6 +101,10 @@ func (r *EditRequest) SetStartDate(date int64) {
 	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.start_date", float64(date)})
 }
 
+func (r *EditRequest) RemoveStartDate() {
+	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.start_date", nil})
+}
+
 func (r *EditRequest) SetScheduled(scheduled bool) {
 	r.Transactions = append(r.Transactions, Transaction{"custom.daedalean.scheduled", scheduled})
 }
