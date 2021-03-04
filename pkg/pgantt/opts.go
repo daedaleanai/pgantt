@@ -31,11 +31,13 @@ type Opts struct {
 	PhabricatorUri string   // Rendez-vous point with phabricator
 	ApiKey         string   // Phabricator API key
 	Projects       []string // List of projects to be handled
+	PollInterval   int      // How often to pool Phabricator for changes in seconds
 }
 
 func NewOpts() (opts *Opts) {
 	opts = new(Opts)
 	opts.Port = 9999
+	opts.PollInterval = 5
 	return
 }
 

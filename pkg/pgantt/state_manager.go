@@ -62,6 +62,16 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 	if err := sm.SyncTasks(); err != nil {
 		return nil, err
 	}
+
+	go func() {
+		for {
+			time.Sleep(time.Duration(opts.PollInterval) * time.Second)
+			if err := sm.SyncTasks(); err != nil {
+				log.Errorf("Failed to sync tasks: %s", err)
+			}
+		}
+	}()
+
 	return sm, nil
 }
 
