@@ -21,54 +21,16 @@ import React, { Component } from 'react';
 import { PageHeader, Radio, Checkbox, DatePicker } from 'antd';
 import { connect } from 'react-redux';
 
+import {
+  dateRangeSet, zoomSet, showTasksOutsideTimescaleSet, showTasksClosedSet,
+  showTasksUnscheduledSet
+} from '../actions/settings';
+
 const { RangePicker } = DatePicker;
 
 class GanttToolbar extends Component {
   state = {
-    currentZoom: 'Days',
-    showOutsideTimescale: true,
-    showClosed: false,
-    showUnscheduled: false
-  };
-
-  handleZoomChange = (e) => {
-    this.setState({
-      currentZoom: e.target.value,
-    });
-
-    if (this.props.onZoomChange) {
-      this.props.onZoomChange(e.target.value);
-    }
-  }
-
-  onToggleOutsideTimescale = e => {
-    this.setState({
-      showOutsideTimescale: e.target.checked,
-    });
-
-    if (this.props.onToggleOutsideTimescale)  {
-      this.props.onToggleOutsideTimescale(e.target.checked);
-    }
-  };
-
-  onToggleClosed = e => {
-    this.setState({
-      showClosed: e.target.checked,
-    });
-
-    if (this.props.onToggleClosed)  {
-      this.props.onToggleClosed(e.target.checked);
-    }
-  };
-
-  onToggleUnscheduled = e => {
-    this.setState({
-      showUnscheduled: e.target.checked,
-    });
-
-    if (this.props.onToggleUnscheduled)  {
-      this.props.onToggleUnscheduled(e.target.checked);
-    }
+    dateRange: null,
   };
 
   onRangeChange = (date, dateString) => {
@@ -76,12 +38,10 @@ class GanttToolbar extends Component {
       dateRange: date
     });
 
-    if (this.props.onRangeChange) {
-      if (date) {
-        this.props.onRangeChange(date[0], date[1]);
-      } else {
-        this.props.onRangeChange(null, null);
-      }
+    if (date) {
+      this.props.dateRangeSet(date[0], date[1]);
+    } else {
+      this.props.dateRangeSet(null, null);
     }
   }
 
@@ -99,23 +59,23 @@ class GanttToolbar extends Component {
           extra={[
             <Checkbox
               key="45462ce1-2d60-4f3d-8fa5-265a024724c8"
-              checked={this.state.showOutsideTimescale}
-              onChange={this.onToggleOutsideTimescale}
+              checked={this.props.showTasksOutsideTimescale}
+              onChange={(e) => this.props.showTasksOutsideTimescaleSet(e.target.checked)}
             >
               Show Tasks Outside of the Timescale
             </Checkbox>,
             <Checkbox
               key="e0b1a9db-14a1-4b10-81ce-45f0d454895a"
-              checked={this.state.showUnscheduled}
-              onChange={this.onToggleUnscheduled}
+              checked={this.props.showTasksUnscheduled}
+              onChange={(e) => this.props.showTasksUnscheduledSet(e.target.checked)}
             >
               Show Unscheduled Tasks
             </Checkbox>,
 
             <Checkbox
               key="bbf1de5c-1f5b-415e-b759-d0eac641ca30"
-              checked={this.state.showClosed}
-              onChange={this.onToggleClosed}
+              checked={this.props.showTasksClosed}
+              onChange={(e) => this.props.showTasksClosedSet(e.target.checked)}
             >
               Show Closed Tasks
             </Checkbox>,
@@ -127,8 +87,8 @@ class GanttToolbar extends Component {
             <Radio.Group
               key="151ea1b3-52e5-4886-8b09-4f13551f3433"
               options={options}
-              onChange={this.handleZoomChange}
-              value={this.state.currentZoom}
+              onChange={(e) => this.props.zoomSet(e.target.value)}
+              value={this.props.zoom}
               optionType="button"
             />,
           ]}
@@ -142,12 +102,22 @@ class GanttToolbar extends Component {
 function mapStateToProps(state, ownProps) {
   const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
   return {
-    projectName: proj.length !== 0 ? proj[0].name : ""
+    projectName: proj.length !== 0 ? proj[0].name : "",
+    zoom: state.settings.zoom,
+    showTasksOutsideTimescale: state.settings.showTasksOutsideTimescale,
+    showTasksClosed: state.settings.showTasksClosed,
+    showTasksUnscheduled: state.settings.showTasksUnscheduled,
   };
 }
 
 function mapDispatchToProps(dispatch) {
-  return {};
+  return {
+    dateRangeSet: (start, end) => dispatch(dateRangeSet(start, end)),
+    zoomSet: (zoom) => dispatch(zoomSet(zoom)),
+    showTasksOutsideTimescaleSet: (setting) => dispatch(showTasksOutsideTimescaleSet(setting)),
+    showTasksUnscheduledSet: (setting) => dispatch(showTasksUnscheduledSet(setting)),
+    showTasksClosedSet: (setting) => dispatch(showTasksClosedSet(setting))
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(GanttToolbar);

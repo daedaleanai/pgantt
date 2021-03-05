@@ -31,11 +31,13 @@ import PGanttApp from './components/PGanttApp';
 
 import { projectsReducer } from './reducers/projects';
 import { planningReducer } from './reducers/planning';
+import { settingsReducer } from './reducers/settings';
 
 export const store = createStore(
   combineReducers({
     projects: projectsReducer,
     planning: planningReducer,
+    settings: settingsReducer,
   }),
   window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );

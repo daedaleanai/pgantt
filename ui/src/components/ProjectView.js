@@ -25,78 +25,19 @@ import GanttToolbar from './GanttToolbar';
 import WrongRoute from './WrongRoute';
 
 class ProjectView extends Component {
-  state = {
-    startDate: null,
-    endDate: null,
-    currentZoom: "Days",
-    showTasksOutsideTimescale: true,
-    showTasksClosed: false,
-    showTasksUnscheduled: false
-  };
-
-  handleZoomChange = (zoom) => {
-    this.setState({
-      currentZoom: zoom
-    });
-  }
-
-  handleToggleOutsideTimescale = (show) => {
-    this.setState({
-      showTasksOutsideTimescale: show
-    });
-  }
-
-  handleToggleClosed = (show) => {
-    this.setState({
-      showTasksClosed: show
-    });
-  }
-
-  handleToggleUnscheduled = (show) => {
-    this.setState({
-      showTasksUnscheduled: show
-    });
-  }
-
-  handleRangeChange = (startDate, endDate) => {
-    this.setState({
-      startDate: startDate,
-      endDate: endDate
-    });
-  }
-
   render() {
     if (!this.props.projectExists) {
       return (<WrongRoute/>);
     }
 
-    const { currentZoom, startDate, endDate, showTasksOutsideTimescale } = this.state;
-    const { showTasksClosed, showTasksUnscheduled } = this.state;
-
     return (
       <div className="row content">
         <div className="box">
         <div className="row header">
-          <GanttToolbar
-            phid={this.props.match.params.phid}
-            zoom={currentZoom}
-            onZoomChange={this.handleZoomChange}
-            onRangeChange={this.handleRangeChange}
-            onToggleOutsideTimescale={this.handleToggleOutsideTimescale}
-            onToggleClosed={this.handleToggleClosed}
-            onToggleUnscheduled={this.handleToggleUnscheduled}
-          />
+          <GanttToolbar phid={this.props.match.params.phid} />
         </div>
         <div className="row content">
-          <Gantt
-            phid={this.props.match.params.phid}
-            zoom={currentZoom}
-            startDate={startDate}
-            endDate={endDate}
-            showTasksOutsideTimescale={showTasksOutsideTimescale}
-            showTasksClosed={showTasksClosed}
-            showTasksUnscheduled={showTasksUnscheduled}
-          />
+          <Gantt phid={this.props.match.params.phid} />
         </div></div>
         </div>
     );

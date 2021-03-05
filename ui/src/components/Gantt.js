@@ -366,13 +366,21 @@ function mapStateToProps(state, ownProps) {
   const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
   return {
     plan: state.planning,
-    project: proj.length !== 0 ? proj[0] : null
+    project: proj.length !== 0 ? proj[0] : null,
+    startDate: state.settings.startDate,
+    endDate: state.settings.endDate,
+    zoom: state.settings.zoom,
+    showTasksOutsideTimescale: state.settings.showTasksOutsideTimescale,
+    showTasksUnscheduled: state.settings.showTasksUnscheduled,
+    showTasksClosed: state.settings.showTasksClosed
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    planSet: (data) => dispatch(planSet(data))
+    planSet: (data) => {
+      dispatch(planSet(data));
+    }
   };
 }
 
