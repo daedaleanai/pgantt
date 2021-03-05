@@ -36,15 +36,6 @@ const styles = {
 };
 
 class PGanttNav extends Component {
-  state = {
-    current: 'pgantt',
-  };
-
-  handleClick = e => {
-    console.log('click ', e);
-    this.setState({ current: e.key });
-  };
-
   componentDidMount() {
     projectsGet()
       .then(data => this.props.projectsSet(data.data))
@@ -52,11 +43,9 @@ class PGanttNav extends Component {
   }
 
   render() {
-    const { current } = this.state;
     return (
       <Menu
-        onClick={this.handleClick}
-        selectedKeys={[current]}
+        selectedKeys={[this.props.selection]}
         mode="horizontal"
         theme='dark'
       >
@@ -80,8 +69,10 @@ class PGanttNav extends Component {
 }
 
 function mapStateToProps(state) {
+  const proj = state.projects.filter(proj => window.location.href.indexOf(proj.phid) !== -1);
   return {
-    ...state
+    projects: state.projects,
+    selection: proj.length !== 0 ? proj[0].phid : "pgantt"
   };
 }
 
