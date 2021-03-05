@@ -32,6 +32,7 @@ import { objectEquals, sanitizeTask, sanitizeLink } from '../utils/helpers';
 class Gantt extends Component {
   tasksToRemove = [];
   linksToRemove = [];
+  clearAll = false;
 
   fetchData = (phid) => {
     return planGet(phid)
@@ -92,23 +93,6 @@ class Gantt extends Component {
         section_parent: "Parent"
       }
     });
-
-    const columns = this.props.project.columns.map((obj) => {
-      return {key: obj.phid, label: obj.name};
-    });
-
-    const fields = [
-      {name: "title", height: 70, map_to: "text", type: "textarea", focus: true},
-      {name: "details", height: 16, type: "template", map_to: "details"},
-      {name: "type", type: "typeselect", map_to: "type"},
-      {name: "parent", type: "parent", allow_root: "true", root_label: "No parent"},
-      {name: "column", height:22, map_to: "column", type: "select", options: columns},
-      {name: "time", map_to: "auto", button: true, type: "duration_optional"}
-    ];
-
-    gantt.config.lightbox.sections = fields;
-    gantt.config.lightbox.project_sections = fields;
-    gantt.config.lightbox.milestone_sections = fields;
 
     gantt.templates.rightside_text = (start, end, task) => {
       if (task.type == gantt.config.types.milestone) {
@@ -271,6 +255,10 @@ class Gantt extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
+    if (this.props.phid !== nextProps.phid) {
+      return true;
+    }
+
     if (this.props.zoom !== nextProps.zoom) {
       return true;
     }
@@ -280,6 +268,18 @@ class Gantt extends Component {
     }
 
     if (this.props.endDate !== nextProps.endDate) {
+      return true;
+    }
+
+    if (this.props.showTasksOutsideTimescale !== nextProps.showTasksOutsideTimescale) {
+      return true;
+    }
+
+    if (this.props.showTasksClosed !== nextProps.showTasksClosed) {
+      return true;
+    }
+
+    if (this.props.showTasksUnscheduled !== nextProps.showTasksUnscheduled) {
       return true;
     }
 
@@ -321,30 +321,10 @@ class Gantt extends Component {
       }
     }
 
-    if (this.props.showTasksOutsideTimescale !== nextProps.showTasksOutsideTimescale) {
-      return true;
-    }
-
-    if (this.props.showTasksClosed !== nextProps.showTasksClosed) {
-      return true;
-    }
-
-    if (this.props.showTasksUnscheduled !== nextProps.showTasksUnscheduled) {
-      return true;
-    }
-
     return false;
   }
 
   componentDidUpdate() {
-    gantt.config.show_tasks_outside_timescale = this.props.showTasksOutsideTimescale;
-    gantt.silent(() => {
-      this.tasksToRemove.forEach((id, index) => gantt.deleteTask(id));
-      this.linksToRemove.forEach((id, index) => gantt.deleteLink(id));
-      this.tasksToRemove = [];
-      this.linksToRemove = [];
-    });
-    gantt.parse(this.props.plan);
     gantt.refreshData();
     gantt.render();
   }
@@ -353,6 +333,37 @@ class Gantt extends Component {
     const { zoom, startDate, endDate } = this.props;
     this.setRange(startDate, endDate);
     this.setZoom(zoom);
+
+    const columns = this.props.project.columns.map((obj) => {
+      return {key: obj.phid, label: obj.name};
+    });
+
+    const fields = [
+      {name: "title", height: 70, map_to: "text", type: "textarea", focus: true},
+      {name: "details", height: 16, type: "template", map_to: "details"},
+      {name: "type", type: "typeselect", map_to: "type"},
+      {name: "parent", type: "parent", allow_root: "true", root_label: "No parent"},
+      {name: "column", height:22, map_to: "column", type: "select", options: columns},
+      {name: "time", map_to: "auto", button: true, type: "duration_optional"}
+    ];
+
+    gantt.config.lightbox.sections = fields;
+    gantt.config.lightbox.project_sections = fields;
+    gantt.config.lightbox.milestone_sections = fields;
+    gantt.resetLightbox();
+
+    gantt.config.show_tasks_outside_timescale = this.props.showTasksOutsideTimescale;
+
+    if (this.tasksToRemove.length != 0) {
+      gantt.silent(() => {
+        gantt.clearAll();
+        this.tasksToRemove = [];
+        this.linksToRemove = [];
+      });
+    }
+
+    gantt.parse(this.props.plan);
+
     return (
       <div
         ref={ (input) => { this.ganttContainer = input; } }
