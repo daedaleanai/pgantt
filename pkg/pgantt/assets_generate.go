@@ -22,20 +22,41 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/daedaleanai/pgantt/pkg/pgantt"
 	"github.com/ljanyst/go-srvutils/gen"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	projectPath := "../../ui"
+
+	hook := func() error {
+		ganttUrl := os.Getenv("DDLN_GANTT")
+		if ganttUrl != "" {
+			log.Infof("Installing the DDLN version of dhtml-gantt...")
+			cmd := exec.Command("npm", "install", ganttUrl)
+			cmd.Dir = projectPath
+			if err := cmd.Run(); err != nil {
+				output, _ := cmd.CombinedOutput()
+				return fmt.Errorf("Cannot install the DDLN version of dhtml-pgantt:\n%s", string(output))
+			}
+		}
+		return nil
+	}
+
 	err := gen.GenerateNodeProject(gen.Options{
-		ProjectPath:  "../../ui",
-		BuildProject: true,
-		Assets:       pgantt.Assets,
-		PackageName:  "pgantt",
-		BuildTags:    "!dev",
-		VariableName: "Assets",
-		Filename:     "assets_prod.go",
+		ProjectPath:     projectPath,
+		PostInstallHook: hook,
+		BuildProject:    true,
+		Assets:          pgantt.Assets,
+		PackageName:     "pgantt",
+		BuildTags:       "!dev",
+		VariableName:    "Assets",
+		Filename:        "assets_prod.go",
 	})
 
 	if err != nil {

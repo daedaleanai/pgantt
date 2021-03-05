@@ -6,7 +6,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.6.3 // indirect
 	github.com/karlseguin/expect v1.0.7 // indirect
-	github.com/ljanyst/go-srvutils v0.3.0
+	github.com/ljanyst/go-srvutils v0.4.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
