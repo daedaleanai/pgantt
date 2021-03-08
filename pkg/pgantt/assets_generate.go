@@ -41,6 +41,7 @@ func main() {
 			cmd := exec.Command("npm", "install", ganttUrl)
 			cmd.Dir = projectPath
 			if err := cmd.Run(); err != nil {
+				log.Errorf("See: https://docs.google.com/document/d/1Vqt_ojK2kxSVHi_-lziuE_lvtgTddpvbKt3t-3x-qBc")
 				output, _ := cmd.CombinedOutput()
 				return fmt.Errorf("Cannot install the DDLN version of dhtml-pgantt:\n%s", string(output))
 			}
