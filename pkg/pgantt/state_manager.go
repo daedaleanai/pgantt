@@ -221,7 +221,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	if ptask.Task.StartDate != task.StartDate {
 		if task.StartDate == "" {
 			req.RemoveStartDate()
-		} else {
+		} else if tm.Unix() != 0 {
 			req.SetStartDate(tm.Unix())
 		}
 		numEds++
