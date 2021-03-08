@@ -118,6 +118,9 @@ class Gantt extends Component {
     gantt.attachEvent("onBeforeLightbox", (id) => {
       var task = gantt.getTask(id);
       task.details = `<b>URL:</b> <a href="${task.url}">${task.url}</a>`;
+      if (typeof task.id === "number") {
+        task.unscheduled = true;
+      }
       return true;
     });
 
