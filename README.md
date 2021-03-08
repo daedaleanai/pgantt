@@ -70,8 +70,8 @@ You can simply run the PGannt executable in the terminal window:
 It will start serving the user interface at `http://localhost:9999` of whatever
 other port you configured.
 
-Configuring Phabricator
------------------------
+Configuring Phabricator (for administrators)
+--------------------------------------------
 
 PGantt needs the additional planning data to be stored along the tickets.
 Therefore, you need to configure your Phabricator instance to keep track of
