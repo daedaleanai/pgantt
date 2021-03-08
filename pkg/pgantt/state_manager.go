@@ -182,8 +182,10 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		req.SetTitle(task.Text)
 
 		req.SetScheduled(!task.Unscheduled)
-		req.SetStartDate(tm.Unix())
-		req.SetDuration(task.Duration)
+		if task.StartDate != "" {
+			req.SetStartDate(tm.Unix())
+			req.SetDuration(task.Duration)
+		}
 		req.SetProgress(task.Progress)
 		req.SetType(task.Type)
 
