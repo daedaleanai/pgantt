@@ -131,7 +131,7 @@ class Gantt extends Component {
       throw err;
     };
 
-    let dp = gantt.createDataProcessor({
+    this.dataProcessor = gantt.createDataProcessor({
       task: {
         create: (data) => {
           return taskCreate(this.props.phid, sanitizeTask(data))
@@ -162,7 +162,7 @@ class Gantt extends Component {
       }
     });
 
-    dp.attachEvent("onAfterUpdate", (id, action, tid, response) => {
+    this.dataProcessor.attachEvent("onAfterUpdate", (id, action, tid, response) => {
       if(action == "error") {
         gantt.clearAll();
         gantt.parse(this.props.plan);
@@ -183,7 +183,6 @@ class Gantt extends Component {
     gantt.config.buttons_left = [];
     gantt.config.buttons_right = ["gantt_cancel_btn", "gantt_save_btn"];
     this.fetchData(this.props.phid);
-    this.initGanttDataProcessor();
     setInterval(() => this.fetchData(this.props.phid), 1000);
   }
 
@@ -236,18 +235,6 @@ class Gantt extends Component {
     }
     gantt.config.start_date = s.toDate();
     gantt.config.end_date = e.toDate();
-  }
-
-  initGanttDataProcessor() {
-    const onDataUpdated = this.props.onDataUpdated;
-    this.dataProcessor = gantt.createDataProcessor((entityType, action, item, id) => {
-      return new Promise((resolve, reject) => {
-        if (onDataUpdated) {
-         onDataUpdated(entityType, action, item, id);
-        }
-        return resolve();
-      });
-    });
   }
 
   componentWillUnmount() {
