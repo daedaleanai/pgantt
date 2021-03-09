@@ -300,7 +300,7 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				ptask.Task.Open = el.Fields["status"].(map[string]interface{})["value"].(string) == "open"
 				col := el.Attachments["columns"]["boards"].(map[string]interface{})[phid].(map[string]interface{})["columns"].([]interface{})[0].(map[string]interface{})
 				ptask.Task.Column = col["phid"].(string)
-				ptask.Task.Url = fmt.Sprintf("%sT%d", p.endpoint, el.ID)
+				ptask.Task.Url = fmt.Sprintf("%s/T%d", p.endpoint, el.ID)
 
 				ptask.Task.Unscheduled = true
 				if el.Fields["custom.daedalean.scheduled"] != nil {
