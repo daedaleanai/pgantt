@@ -309,8 +309,6 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 
 				if el.Fields["custom.daedalean.duration"] != nil {
 					ptask.Task.Duration = int(el.Fields["custom.daedalean.duration"].(float64))
-				} else {
-					ptask.Task.Unscheduled = true
 				}
 
 				if el.Fields["custom.daedalean.progress"] != nil {
