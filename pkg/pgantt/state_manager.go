@@ -182,7 +182,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		req.SetTitle(task.Text)
 
 		req.SetScheduled(!task.Unscheduled)
-		if task.StartDate != "" {
+		if task.StartDate != "" && tm.Unix() != 0 {
 			req.SetStartDate(tm.Unix())
 			req.SetDuration(task.Duration)
 		}
@@ -221,9 +221,10 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	}
 
 	if ptask.Task.StartDate != task.StartDate {
-		if task.StartDate == "" {
+		if task.StartDate == "" || tm.Unix() == 0 {
 			req.RemoveStartDate()
-		} else if tm.Unix() != 0 {
+			task.Duration = 0
+		} else {
 			req.SetStartDate(tm.Unix())
 		}
 		numEds++
