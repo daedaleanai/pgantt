@@ -192,6 +192,7 @@ class Gantt extends Component {
     if(thisPhid !== nextPhid) {
       this.fetchData(nextPhid);
     }
+    this.scrollPos = gantt.getScrollState();
   }
 
   setZoom(value) {
@@ -316,7 +317,9 @@ class Gantt extends Component {
 
   componentDidUpdate() {
     gantt.refreshData();
+    gantt.sort("text", false);
     gantt.render();
+    gantt.scrollTo(this.scrollPos.x, this.scrollPos.y);
   }
 
   render() {
