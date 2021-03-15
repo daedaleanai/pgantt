@@ -206,7 +206,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		numEds++
 	}
 
-	if ptask.Task.Parent != "" && ptask.Task.Parent != task.Parent {
+	if task.Parent != "" && ptask.Task.Parent != task.Parent {
 		if task.Parent == "0" {
 			req.RemoveParent()
 		} else {
