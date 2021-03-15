@@ -413,6 +413,42 @@ func (p *Phabricator) EditTask(req *EditRequest) (string, error) {
 	return res.Object.Phid, nil
 }
 
+func (p *Phabricator) Users() ([]User, error) {
+	after := ""
+	users := []User{}
+	for {
+		req := requests.SearchRequest{
+			After: after,
+		}
+		var res responses.SearchResponse
+		if err := p.c.Call("user.search", &req, &res); err != nil {
+			return nil, err
+		}
+
+	UserLoop:
+		for _, el := range res.Data {
+			for _, role := range el.Fields["roles"].([]interface{}) {
+				if role.(string) == "disabled" {
+					continue UserLoop
+				}
+			}
+			user := User{
+				Phid:     el.PHID,
+				Name:     el.Fields["username"].(string),
+				RealName: el.Fields["realName"].(string),
+			}
+			log.Debugf("Found active user: %s (%q)", user.Name, user.RealName)
+			users = append(users, user)
+		}
+
+		after = res.Cursor.After
+		if after == "" {
+			break
+		}
+	}
+	return users, nil
+}
+
 func NewPhabricator(endpoint, key string) (*Phabricator, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {

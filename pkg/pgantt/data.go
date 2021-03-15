@@ -30,6 +30,12 @@ type Project struct {
 	Columns []Column `json:"columns"`
 }
 
+type User struct {
+	Phid     string `json:"phid"`
+	Name     string `json:"name"`
+	RealName string `json:"real_name"`
+}
+
 type Task struct {
 	Id          string  `json:"id"`
 	Parent      string  `json:"parent"`

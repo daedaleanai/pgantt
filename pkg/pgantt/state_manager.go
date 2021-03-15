@@ -34,6 +34,7 @@ type StateManager struct {
 	m        sync.Mutex
 	projects []Project
 	tasks    map[string]map[string]*PTask
+	users    []User
 }
 
 func NewStateManager(opts *Opts) (*StateManager, error) {
@@ -62,6 +63,10 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 		}
 		sm.projects = append(sm.projects, *proj)
 		sm.tasks[proj.Phid] = make(map[string]*PTask)
+	}
+
+	if sm.users, err = sm.phab.Users(); err != nil {
+		return nil, err
 	}
 
 	log.Infof("Syncing tasks, it may take a while...")
