@@ -189,7 +189,7 @@ class Gantt extends Component {
   componentWillReceiveProps(nextProps) {
     const thisPhid = this.props.phid;
     const nextPhid = nextProps.phid;
-    if(thisPhid !== nextPhid) {
+    if (thisPhid !== nextPhid) {
       this.fetchData(nextPhid);
     }
     this.scrollPos = gantt.getScrollState();
@@ -317,7 +317,6 @@ class Gantt extends Component {
 
   componentDidUpdate() {
     gantt.refreshData();
-    gantt.sort("text", false);
     gantt.render();
     gantt.scrollTo(this.scrollPos.x, this.scrollPos.y);
   }
