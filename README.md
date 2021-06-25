@@ -15,19 +15,17 @@ Building
 
 You will need Go and NodeJS installed on your machine. Once you do, simply type:
 
-    ]==> go generate ./...
-    ]==> cd cmd/pgantt 
-    ]==> go build
+    $ go generate ./...
+    $ go build ./cmd/pgantt
 
 If you're a Daedalean employee, do the following instead:
 
-    ]==> DDLN_GANTT=1 go generate ./...
-    ]==> cd cmd/pgantt 
-    ]==> go build
+    $ DDLN_GANTT=1 go generate ./...
+    $ go build ./cmd/pgantt
 
-The above will create a self-contain executable that you can move to whatever
-location in your system you wish. It will not store or read any data locally
-except for the configuration file described below.
+The above will create a self-contain `pgantt` executable that you can move to
+whatever location in your system you wish. It will not store or read any data
+locally except for the configuration file described below.
 
 Configuration and Running
 -------------------------
@@ -65,10 +63,24 @@ commandline.
 
 You can simply run the PGannt executable in the terminal window:
 
-    ==> ./pgantt
+    $ ./pgantt
 
 It will start serving the user interface at `http://localhost:9999` of whatever
 other port you configured.
+
+Developing
+----------
+
+The changed Javascript needs to be recompiled with `go generate` which is very
+slow. To avoid this, once the local `./pgantt` server is up, start a separate
+server for the UI with:
+
+    $ cd ui
+    $ npm run-script start
+
+Wait a bit for it to start, then open the displayed URL. The page in the browser
+is updated automatically when the Javascript files are changed.
+
 
 Configuring Phabricator (for administrators)
 --------------------------------------------
