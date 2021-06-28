@@ -298,7 +298,13 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				ptask.Task.Id = taskPhid
 				ptask.Task.Text = el.Fields["name"].(string)
 				ptask.Task.Open = el.Fields["status"].(map[string]interface{})["value"].(string) == "open"
-				col := el.Attachments["columns"]["boards"].(map[string]interface{})[phid].(map[string]interface{})["columns"].([]interface{})[0].(map[string]interface{})
+				board := el.Attachments["columns"]["boards"].(map[string]interface{})[phid]
+				if board == nil {
+					// The task is on a different board than `phid`.
+					// Can happen with old tasks.
+					continue
+				}
+				col := board.(map[string]interface{})["columns"].([]interface{})[0].(map[string]interface{})
 				ptask.Task.Column = col["phid"].(string)
 				ptask.Task.Url = fmt.Sprintf("%s/T%d", p.endpoint, el.ID)
 

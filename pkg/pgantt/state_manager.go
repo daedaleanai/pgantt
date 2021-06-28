@@ -52,6 +52,9 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Cannot fetch project names: %s", err)
 		}
+		log.Printf("Using projects you are a member of: %s", strings.Join(projects, ", "))
+	} else {
+		log.Printf("Using projects from ~/.arcrc: %s", strings.Join(projects, ", "))
 	}
 
 	sm.tasks = make(map[string]map[string]*PTask)
@@ -74,6 +77,7 @@ func NewStateManager(opts *Opts) (*StateManager, error) {
 		return nil, err
 	}
 
+	log.Infof("Syncing tasks every %d seconds", time.Duration(opts.PGantt.PollInterval))
 	go func() {
 		for {
 			time.Sleep(time.Duration(opts.PGantt.PollInterval) * time.Second)
