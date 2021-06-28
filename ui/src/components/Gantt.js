@@ -34,8 +34,8 @@ class Gantt extends Component {
   linksToRemove = [];
   clearAll = false;
 
-  fetchData = (phid) => {
-    return planGet(phid)
+  fetchData() {
+    return planGet(this.props.phid)
       .then(data => this.props.planSet(data.data))
       .catch(msg => message.error(msg.toString()));
   }
@@ -182,17 +182,8 @@ class Gantt extends Component {
     });
     gantt.config.buttons_left = [];
     gantt.config.buttons_right = ["gantt_cancel_btn", "gantt_save_btn"];
-    this.fetchData(this.props.phid);
-    setInterval(() => this.fetchData(this.props.phid), 1000);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const thisPhid = this.props.phid;
-    const nextPhid = nextProps.phid;
-    if (thisPhid !== nextPhid) {
-      this.fetchData(nextPhid);
-    }
-    this.scrollPos = gantt.getScrollState();
+    this.fetchData();
+    setInterval(() => this.fetchData(), 1000);
   }
 
   setZoom(value) {
@@ -315,13 +306,9 @@ class Gantt extends Component {
     return false;
   }
 
-  componentDidUpdate() {
-    gantt.refreshData();
-    gantt.render();
-    gantt.scrollTo(this.scrollPos.x, this.scrollPos.y);
-  }
-
   render() {
+    this.scrollPos = gantt.getScrollState();
+
     const { zoom, startDate, endDate } = this.props;
     this.setRange(startDate, endDate);
     this.setZoom(zoom);
@@ -363,6 +350,16 @@ class Gantt extends Component {
       ></div>
     );
   }
+
+  componentDidUpdate() {
+    gantt.refreshData();
+    gantt.render();
+    // Restore the scroll position.
+    // If the update is caused by changing the calendar
+    // interval, the result can appear to be random.
+    gantt.scrollTo(this.scrollPos.x, this.scrollPos.y);
+  }
+
 }
 
 function mapStateToProps(state, ownProps) {
