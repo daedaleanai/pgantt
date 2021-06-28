@@ -33,6 +33,7 @@ class Gantt extends Component {
   tasksToRemove = [];
   linksToRemove = [];
   clearAll = false;
+  expandedTasks = new Map();
 
   fetchData() {
     return planGet(this.props.phid)
@@ -308,6 +309,10 @@ class Gantt extends Component {
 
   render() {
     this.scrollPos = gantt.getScrollState();
+    this.expandedTasks = new Map();
+    gantt.eachTask(task => {
+      this.expandedTasks.set(task.id, task.$open);
+    })
 
     const { zoom, startDate, endDate } = this.props;
     this.setRange(startDate, endDate);
@@ -353,7 +358,18 @@ class Gantt extends Component {
 
   componentDidUpdate() {
     gantt.refreshData();
+
+    // By default all tasks are expanded. Keep the collapsed ones as they were.
+    if (this.expandedTasks.size > 0) {
+      gantt.eachTask(task => {
+        if (this.expandedTasks.has(task.id)) {
+          task.$open = this.expandedTasks.get(task.id);
+        }
+      });
+    }
+
     gantt.render();
+
     // Restore the scroll position.
     // If the update is caused by changing the calendar
     // interval, the result can appear to be random.
