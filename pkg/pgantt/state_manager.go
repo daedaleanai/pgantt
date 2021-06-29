@@ -123,35 +123,17 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 	plan.Data = make([]Task, 0)
 	plan.Links = make([]Link, 0)
 
-	taskMap := make(map[string]bool)
-	var add func(t *PTask)
-	add = func(t *PTask) {
-		if _, added := taskMap[t.Task.Id]; added {
-			return
-		}
-
-		if t.Task.Parent != "" {
-			add(tasks[t.Task.Parent])
-		}
-
-		taskMap[t.Task.Id] = true
-		plan.Data = append(plan.Data, t.Task)
-		for _, link := range t.Links {
+	for phid := range tasks {
+		task := tasks[phid]
+		plan.Data = append(plan.Data, task.Task)
+		for _, link := range task.Links {
 			plan.Links = append(plan.Links, *link)
 		}
 	}
 
-	taskPhids := make([]string, 0, len(tasks))
-	for phid := range tasks {
-		taskPhids = append(taskPhids, phid)
-	}
-
-	sort.Strings(taskPhids)
-
-	for _, phid := range taskPhids {
-		task := tasks[phid]
-		add(task)
-	}
+	sort.Slice(plan.Data[:], func(i, j int) bool {
+		return plan.Data[i].Id < plan.Data[j].Id
+	})
 
 	sort.Slice(plan.Links[:], func(i, j int) bool {
 		return plan.Links[i].Id < plan.Links[j].Id
