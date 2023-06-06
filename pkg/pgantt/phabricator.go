@@ -47,9 +47,12 @@ type PTask struct {
 	Task   Task
 }
 
+// A succeeding task.
 type PLinkData struct {
+	// Succeeding task Phid.
 	Target string `json:"target"`
-	Type   string `json:"type"`
+	// Currently it seems to be only "0".
+	Type string `json:"type"`
 }
 
 type Transaction struct {
@@ -295,7 +298,7 @@ func (p *Phabricator) SyncTasksForProject(phid string, tasks map[string]*PTask) 
 				ptask.IsLeaf = true
 				ptask.Links = make(map[string]*Link)
 				ptask.Mtime = mtime
-				ptask.Task.Id = taskPhid
+				ptask.Task.Phid = taskPhid
 				ptask.Task.Text = el.Fields["name"].(string)
 				ptask.Task.Open = el.Fields["status"].(map[string]interface{})["value"].(string) == "open"
 				board := el.Attachments["columns"]["boards"].(map[string]interface{})[phid]

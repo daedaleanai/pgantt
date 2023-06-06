@@ -31,13 +31,15 @@ type Project struct {
 }
 
 type User struct {
-	Phid     string `json:"phid"`
 	Name     string `json:"name"`
+	Phid     string `json:"phid"`
 	RealName string `json:"real_name"`
 }
 
 type Task struct {
-	Id          string  `json:"id"`
+	// The json name needs to be "id" otherwise the DHTMLX Gantt library says
+	// "Task not found id=...".
+	Phid        string  `json:"id"`
 	Parent      string  `json:"parent"`
 	Text        string  `json:"text"`
 	Type        string  `json:"type"`
@@ -51,8 +53,11 @@ type Task struct {
 }
 
 type Link struct {
-	Id     string `json:"id"`
+	// "Source#Target#Type"
+	Id string `json:"id"`
+	// Source task Phid.
 	Source string `json:"source"`
+	// Target task Phid.
 	Target string `json:"target"`
 	Type   string `json:"type"`
 }

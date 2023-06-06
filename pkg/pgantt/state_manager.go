@@ -132,7 +132,7 @@ func (s *StateManager) PlanningData(phid string) *PlanningData {
 	}
 
 	sort.Slice(plan.Data[:], func(i, j int) bool {
-		return plan.Data[i].Id < plan.Data[j].Id
+		return plan.Data[i].Phid < plan.Data[j].Phid
 	})
 
 	sort.Slice(plan.Links[:], func(i, j int) bool {
@@ -151,7 +151,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		return "", fmt.Errorf("No such project: %q", projPhid)
 	}
 
-	ptask, ok := tasks[task.Id]
+	ptask, ok := tasks[task.Phid]
 
 	var tm time.Time
 	var err error
@@ -186,7 +186,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 	// Edit task
 	numEds := 0
 	req := EditRequest{}
-	req.SetObjectId(task.Id)
+	req.SetObjectId(task.Phid)
 	if ptask.Task.Column != task.Column {
 		req.SetColumn(task.Column)
 		numEds++
@@ -240,7 +240,7 @@ func (s *StateManager) EditTask(projPhid string, task *Task) (string, error) {
 		return s.phab.EditTask(&req)
 	}
 
-	return task.Id, nil
+	return task.Phid, nil
 }
 
 func (s *StateManager) DeleteLink(projPhid, id string) error {

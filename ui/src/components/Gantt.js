@@ -124,8 +124,8 @@ class Gantt extends Component {
       return true;
     });
 
-    gantt.attachEvent("onBeforeLightbox", (id) => {
-      var task = gantt.getTask(id);
+    gantt.attachEvent("onBeforeLightbox", (taskPhid) => {
+      var task = gantt.getTask(taskPhid);
       task.details = `<b>URL:</b> <a href="${task.url}">${task.url}</a>`;
       if (typeof task.id === "number") {
         task.unscheduled = true;
@@ -287,10 +287,10 @@ class Gantt extends Component {
       return true;
     }
 
-    const newTaskIds = new Set(nextProps.plan.data.map(item => item.id));
+    const newTaskPhids = new Set(nextProps.plan.data.map(item => item.id));
     this.tasksToRemove = this.props.plan.data
       .map(item => item.id)
-      .filter(item => !newTaskIds.has(item));
+      .filter(phid => !newTaskPhids.has(phid));
 
     if (this.tasksToRemove.length !== 0) {
       return true;
