@@ -19,12 +19,13 @@
 
 export const PLAN_SET = 'PLAN_SET';
 
+// Returns an action for setting the planning of the current project in the store.
 export function planSet(plan) {
   // taskId -> parentTaskId
   let parents = new Map();
-  for (var i = 0; i < plan.data.length; i++) {
-    parents.set(plan.data[i].id, plan.data[i].parent)
-  }
+  plan.data.forEach((task) => {
+    parents.set(task.id, task.parent)
+  });
 
   // taskId -> how many ancestor tasks it has
   let _levels = new Map();

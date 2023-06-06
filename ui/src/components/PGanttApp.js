@@ -18,17 +18,15 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
-import moment from 'moment';
 import { Result } from 'antd';
 import { BoxPlotOutlined } from '@ant-design/icons';
 import { Route, Switch } from 'react-router-dom';
 
 import PGanttNav from './PGanttNav';
 import ProjectView from './ProjectView';
-import Gantt from './Gantt';
-import GanttToolbar from './GanttToolbar';
 import WrongRoute from './WrongRoute';
 
+// Root component representing the webapp.
 class PGanttApp extends Component {
   render() {
     const welcome = (props) => (

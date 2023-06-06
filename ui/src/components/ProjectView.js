@@ -24,6 +24,7 @@ import Gantt from './Gantt';
 import GanttToolbar from './GanttToolbar';
 import WrongRoute from './WrongRoute';
 
+// Component for displaying a Phabricator project.
 class ProjectView extends Component {
   render() {
     if (!this.props.projectExists) {
@@ -44,6 +45,7 @@ class ProjectView extends Component {
   }
 }
 
+// Builds props for the `ProjectView` component out of the Redux store state.
 function mapStateToProps(state, ownProps) {
   const proj = state.projects.filter(proj => proj.phid === ownProps.match.params.phid);
   return {
@@ -51,6 +53,7 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
+// Create functions that dispatch actions to the Redux store.
 function mapDispatchToProps(dispatch) {
   return {};
 }

@@ -18,8 +18,9 @@
 //------------------------------------------------------------------------------
 
 import React, { Component } from 'react';
-import { Result, Button } from 'antd';
+import { Result } from 'antd';
 
+// Component for displaying 404.
 class WrongRoute extends Component {
   render() {
     return (

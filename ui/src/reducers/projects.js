@@ -19,9 +19,11 @@
 
 import { PROJECTS_SET } from '../actions/projects';
 
-const projectsState = [];
+// The initial empty list of projects.
+const initialProjectsState = [];
 
-export function projectsReducer(state = projectsState, action) {
+// Performs the action onto the state and returns the updated state.
+export function projectsReducer(state = initialProjectsState, action) {
   switch(action.type) {
   case PROJECTS_SET:
     return action.projects;

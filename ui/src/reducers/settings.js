@@ -22,16 +22,18 @@ import {
   SHOW_TASKS_UNSCHEDULED_SET, SHOW_TASKS_CLOSED_SET
 } from '../actions/settings';
 
-const settingsState = {
-  endDate: null,
+// The initial UI settings.
+const initialSettingsState = {
   startDate: null,
+  endDate: null,
   zoom: "Days",
   showTasksOutsideTimescale: true,
   showTasksUnscheduled: false,
   showTasksClosed: false
 };
 
-export function settingsReducer(state = settingsState, action) {
+// Performs the action onto the state and returns the updated state.
+export function settingsReducer(state = initialSettingsState, action) {
   switch(action.type) {
   case DATE_RANGE_SET:
     return {

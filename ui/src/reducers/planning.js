@@ -19,12 +19,14 @@
 
 import { PLAN_SET } from '../actions/planning';
 
-const planningState = {
+// The initial empty planning state of the current project.
+const initialPlanningState = {
   data: [],
   links: [],
 };
 
-export function planningReducer(state = planningState, action) {
+// Performs the action onto the state and returns the updated state.
+export function planningReducer(state = initialPlanningState, action) {
   switch(action.type) {
   case PLAN_SET:
     return action.plan;

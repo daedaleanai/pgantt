@@ -17,18 +17,20 @@
 // along with PGantt.  If not, see <https://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 
+// Returns whether the own properties of the two objects are the same.
+// The inherited properties are ignored.
 export function objectEquals(x, y) {
-  for(var p in x) {
-    if(x.hasOwnProperty(p)) {
-      if(x[p] !== y[p]) {
+  for (var p in x) {
+    if (x.hasOwnProperty(p)) {
+      if (x[p] !== y[p]) {
         return false;
       }
     }
   }
 
-  for(var p in y){
-    if(y.hasOwnProperty(p)) {
-      if(x[p] !== y[p]) {
+  for (var p in y) {
+    if (y.hasOwnProperty(p)) {
+      if (x[p] !== y[p]) {
         return false;
       }
     }

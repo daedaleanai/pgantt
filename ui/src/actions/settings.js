@@ -23,6 +23,7 @@ export const SHOW_TASKS_OUTSIDE_TIMESCALE_SET = 'SHOW_TASKS_OUTSIDE_TIMESCALE_SE
 export const SHOW_TASKS_UNSCHEDULED_SET = 'SHOW_TASKS_UNSCHEDULED_SET';
 export const SHOW_TASKS_CLOSED_SET = 'SHOW_TASKS_CLOSED_SET';
 
+// Creates an action that sets the date range setting.
 export function dateRangeSet(startDate, endDate) {
   return {
     type: DATE_RANGE_SET,
@@ -31,6 +32,7 @@ export function dateRangeSet(startDate, endDate) {
   };
 }
 
+// Creates an action that sets the zoom setting.
 export function zoomSet(zoom) {
   return {
     type: ZOOM_SET,
@@ -38,6 +40,7 @@ export function zoomSet(zoom) {
   };
 }
 
+// Creates an action that sets the showTasksOutsideTimescale setting.
 export function showTasksOutsideTimescaleSet(setting) {
   return {
     type: SHOW_TASKS_OUTSIDE_TIMESCALE_SET,
@@ -45,6 +48,7 @@ export function showTasksOutsideTimescaleSet(setting) {
   };
 }
 
+// Creates an action that sets the showTasksUnscheduled setting.
 export function showTasksUnscheduledSet(setting) {
   return {
     type: SHOW_TASKS_UNSCHEDULED_SET,
@@ -52,6 +56,7 @@ export function showTasksUnscheduledSet(setting) {
   };
 }
 
+// Creates an action that sets the showTasksClosed setting.
 export function showTasksClosedSet(setting) {
   return {
     type: SHOW_TASKS_CLOSED_SET,

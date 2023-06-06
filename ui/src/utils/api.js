@@ -29,7 +29,7 @@ const headers = {
 };
 
 const responseHandler = (response) => {
-  if(!response.ok) {
+  if (!response.ok) {
     if (response.error) {
       throw Error(response.error);
     }
@@ -40,65 +40,73 @@ const responseHandler = (response) => {
   return response.json();
 };
 
+// Get the list of projects from the webapp server.
 export const projectsGet = () => {
   const url = `${api}/projects`;
   return fetch(url, { headers })
     .then(responseHandler);
 };
 
-export const planGet = (phid) => {
-  const url = `${api}/plan/${phid}`;
+// Get the tasks of the project from the webapp server.
+export const planGet = (projectPhid) => {
+  const url = `${api}/plan/${projectPhid}`;
   return fetch(url, { headers })
     .then(responseHandler);
 };
 
-export const taskCreate = (phid, data) => {
-  const url = `${api}/edit/${phid}/task`;
+// Tells the webapp server to create a task.
+export const taskCreate = (projectPhid, task) => {
+  const url = `${api}/edit/${projectPhid}/task`;
   return fetch(url, {
     method: "POST",
     headers,
-    body: JSON.stringify(data)
+    body: JSON.stringify(task)
   })
     .then(responseHandler)
     .then(extractData);
 };
 
-export const taskEdit = (phid, data) => {
-  const url = `${api}/edit/${phid}/task`;
+// Tells the webapp server to update a task.
+export const taskEdit = (projectPhid, task) => {
+  const url = `${api}/edit/${projectPhid}/task`;
   return fetch(url, {
     method: "PUT",
     headers,
-    body: JSON.stringify(data)
+    body: JSON.stringify(task)
   })
     .then(responseHandler)
     .then(extractData);
 };
 
-export const taskDelete = (phid, id) => {
+// Tells the webapp server to delete a task.
+export const taskDelete = (projectPhid, id) => {
   return Promise.reject(new Error("You cannot delete tasks."));
 };
 
-export const linkCreate = (phid, data) => {
-  const url = `${api}/edit/${phid}/link`;
+// Tells the webapp server to create a link between two tasks.
+export const linkCreate = (projectPhid, link) => {
+  const url = `${api}/edit/${projectPhid}/link`;
   return fetch(url, {
     method: "POST",
     headers,
-    body: JSON.stringify(data)
+    body: JSON.stringify(link)
   })
     .then(responseHandler)
     .then(extractData);
 };
 
-export const linkEdit = (phid, data) => {
+// Tells the webapp server to update a link between two tasks.
+export const linkEdit = (projectPhid, link) => {
   return Promise.reject(new Error("You cannot edit links."));
 };
 
-export const linkDelete = (phid, id) => {
-  const url = `${api}/edit/${phid}/link`;
+// Tells the webapp server to delete a link between two tasks.
+export const linkDelete = (projectPhid, linkId) => {
+  const url = `${api}/edit/${projectPhid}/link`;
   return fetch(url, {
     method: "DELETE",
     headers,
-    body: JSON.stringify(id)
+    body: JSON.stringify(linkId)
   })
     .then(responseHandler)
     .then(extractData);

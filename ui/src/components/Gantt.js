@@ -29,15 +29,22 @@ import {
 } from '../utils/api';
 import { objectEquals, sanitizeTask, sanitizeLink } from '../utils/helpers';
 
+// Component displaying a gantt chart with tasks and links.
 class Gantt extends Component {
   tasksToRemove = [];
   linksToRemove = [];
   clearAll = false;
   expandedTasks = new Map();
 
+  // Fetches the planning (tasks and links between them) and applies it to the
+  // component.
   fetchData() {
+    console.debug("Fetching planning for project:", this.props.project.name);
     return planGet(this.props.phid)
-      .then(data => this.props.planSet(data.data))
+      .then(data => {
+        let planning = data.data;
+        this.props.planSet(planning);
+      })
       .catch(msg => message.error(msg.toString()));
   }
 
@@ -60,6 +67,8 @@ class Gantt extends Component {
       marker: true
     });
 
+    // Configure how the dates are displayed and parsed
+    // https://docs.dhtmlx.com/gantt/api__gantt_date_format_config.html
     gantt.config.date_format = "%Y-%m-%d";
 
     const dateToStr = gantt.date.date_to_str(gantt.config.date_format);
@@ -69,7 +78,6 @@ class Gantt extends Component {
 
     const strToDate = gantt.date.str_to_date(
       gantt.config.date_format, gantt.config.server_utc);
-
     gantt.templates.parse_date = (date) => {
       return strToDate(date);
     };
@@ -132,31 +140,39 @@ class Gantt extends Component {
       throw err;
     };
 
+    // The data processor attached to the chart handles Tasks and Links
+    // adjustments made by the user.
     this.dataProcessor = gantt.createDataProcessor({
       task: {
         create: (data) => {
+          console.log("Creating task");
           return taskCreate(this.props.phid, sanitizeTask(data))
             .catch(logError);
         },
         update: (data, id) => {
+          console.log("Updating task:", id);
           return taskEdit(this.props.phid, sanitizeTask(data))
             .catch(logError);
         },
         delete: (id) => {
+          console.log("Deleting task:", id);
           return taskDelete(this.props.phid, id)
             .catch(logError);
         }
       },
       link: {
         create: (data) => {
+          console.log("Creating link");
           return linkCreate(this.props.phid, sanitizeLink(data))
             .catch(logError);
         },
         update: (data, id) => {
+          console.log("Updating link:", id);
           return linkEdit(this.props.phid, sanitizeLink(data))
             .catch(logError);
         },
         delete: (id) => {
+          console.log("Deleting link:", id);
           return linkDelete(this.props.phid, id)
             .catch(logError);
         }
@@ -164,12 +180,14 @@ class Gantt extends Component {
     });
 
     this.dataProcessor.attachEvent("onAfterUpdate", (id, action, tid, response) => {
-      if(action == "error") {
+      // Reset the chart in case of error.
+      if (action == "error") {
         gantt.clearAll();
         gantt.parse(this.props.plan);
       }
     });
 
+    // Hide tasks that should be hidden.
     gantt.attachEvent("onBeforeTaskDisplay", (id, task) => {
       if (!this.props.showTasksClosed && !task.open) {
         return false;
@@ -179,10 +197,13 @@ class Gantt extends Component {
         return false;
       }
 
+      // The task shall be displayed.
       return true;
     });
+
     gantt.config.buttons_left = [];
     gantt.config.buttons_right = ["gantt_cancel_btn", "gantt_save_btn"];
+
     this.fetchData();
     setInterval(() => this.fetchData(), 1000);
   }
@@ -322,6 +343,8 @@ class Gantt extends Component {
       return {key: obj.phid, label: obj.name};
     });
 
+    // Configure lightbox sections.
+    // https://docs.dhtmlx.com/gantt/api__gantt_lightbox_config.html
     const fields = [
       {name: "title", height: 70, map_to: "text", type: "textarea", focus: true},
       {name: "details", height: 16, type: "template", map_to: "details"},
@@ -330,7 +353,6 @@ class Gantt extends Component {
       {name: "column", height:22, map_to: "column", type: "select", options: columns},
       {name: "time", map_to: "auto", button: true, type: "duration_optional"}
     ];
-
     gantt.config.lightbox.sections = fields;
     gantt.config.lightbox.project_sections = fields;
     gantt.config.lightbox.milestone_sections = fields;
@@ -378,6 +400,7 @@ class Gantt extends Component {
 
 }
 
+// Builds props for the `Gantt` component out of the Redux store state.
 function mapStateToProps(state, ownProps) {
   const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
   return {
@@ -392,11 +415,10 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
+// Create functions that dispatch actions to the Redux store.
 function mapDispatchToProps(dispatch) {
   return {
-    planSet: (data) => {
-      dispatch(planSet(data));
-    }
+    planSet: (data) => dispatch(planSet(data))
   };
 }
 

@@ -19,7 +19,7 @@
 
 import React, { Component } from 'react';
 import { Menu, message } from 'antd';
-import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
+import { SettingOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
@@ -35,8 +35,10 @@ const styles = {
   }
 };
 
+// Top navigation bar allowing to select a current project.
 class PGanttNav extends Component {
   componentDidMount() {
+    console.debug("Fetching projects");
     projectsGet()
       .then(data => this.props.projectsSet(data.data))
       .catch(msg => message.error(msg.toString()));
@@ -68,6 +70,7 @@ class PGanttNav extends Component {
   }
 }
 
+// Builds props for the `PGanttNav` component out of the Redux store state.
 function mapStateToProps(state) {
   const proj = state.projects.filter(proj => window.location.href.indexOf(proj.phid) !== -1);
   return {
@@ -76,6 +79,7 @@ function mapStateToProps(state) {
   };
 }
 
+// Create functions that dispatch actions to the Redux store.
 function mapDispatchToProps(dispatch) {
   return {
     projectsSet: (data) => dispatch(projectsSet(data))

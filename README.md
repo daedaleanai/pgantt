@@ -52,7 +52,7 @@ create the `~/.arcrc` file along the following lines:
 You can get the API Token by visiting:
 `https://phabricator.yourdomain.com/conduit/login/`.
 
-Since the Phabricator's Conduit API does not allow for easy qurying of the
+Since the Phabricator's Conduit API does not allow for easy querying of the
 information necessary to run PGantt, PGantt fetches all the information abount
 all the projects you follow at startup, and then does smart updates, polling,
 and data caching. This means that the regular opration is fast, but the startup

@@ -19,6 +19,7 @@
 
 export const PROJECTS_SET = 'PROJECTS_SET';
 
+// Returns an action for setting the list of projects in the store.
 export function projectsSet(projects) {
   return {
     type: PROJECTS_SET,

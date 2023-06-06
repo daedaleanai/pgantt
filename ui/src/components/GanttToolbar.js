@@ -28,6 +28,8 @@ import {
 
 const { RangePicker } = DatePicker;
 
+// Controls for the Gantt chart allowing basic filtering of the tasks, defining
+// a date range and zooming.
 class GanttToolbar extends Component {
   state = {
     dateRange: null,
@@ -99,6 +101,7 @@ class GanttToolbar extends Component {
   }
 }
 
+// Builds props for the `GanttToolbar` component out of the Redux store state.
 function mapStateToProps(state, ownProps) {
   const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
   return {
@@ -110,6 +113,7 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
+// Create functions that dispatch actions to the Redux store.
 function mapDispatchToProps(dispatch) {
   return {
     dateRangeSet: (start, end) => dispatch(dateRangeSet(start, end)),
