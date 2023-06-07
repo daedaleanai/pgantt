@@ -49,6 +49,10 @@ class Gantt extends Component {
   }
 
   componentDidMount() {
+    // Without this, gantt.parse(this.props.plan) makes changes to
+    // this.props.plan!
+    gantt.config.deepcopy_on_parse = true;
+
     gantt.templates.scale_cell_class = (date) => {
       if (date.getDay() == 0 || date.getDay() == 6) {
         return "weekend";
