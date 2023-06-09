@@ -20,7 +20,6 @@
 import React, { Component } from 'react';
 import { gantt } from 'dhtmlx-gantt';
 import { message } from 'antd';
-import moment from 'moment';
 import { connect } from 'react-redux';
 
 import { planSet } from '../actions/planning';
@@ -237,24 +236,6 @@ class Gantt extends Component {
     }
   }
 
-  setRange(start, end) {
-    let s = start;
-    let e = end;
-    if (start == null || end === null) {
-      s = moment();
-      e = moment();
-      if (s.day() !== 0) {
-        s = s.day(0); // previous Sunday
-      }
-      if (e.day() !== 6) {
-        e = e.day(6); // next Saturday
-      }
-
-    }
-    gantt.config.start_date = s.toDate();
-    gantt.config.end_date = e.toDate();
-  }
-
   componentWillUnmount() {
     if (this.dataProcessor) {
       this.dataProcessor.destructor();
@@ -339,9 +320,11 @@ class Gantt extends Component {
       this.expandedTasks.set(task.id, task.$open);
     })
 
-    const { zoom, startDate, endDate } = this.props;
-    this.setRange(startDate, endDate);
-    this.setZoom(zoom);
+    // The date range displayed by the chart.
+    gantt.config.start_date = this.props.startDate;
+    gantt.config.end_date = this.props.endDate;
+
+    this.setZoom(this.props.zoom);
 
     const columns = this.props.project.columns.map((obj) => {
       return {key: obj.phid, label: obj.name};

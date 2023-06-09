@@ -20,31 +20,29 @@
 import React, { Component } from 'react';
 import { PageHeader, Radio, Checkbox, DatePicker } from 'antd';
 import { connect } from 'react-redux';
+import moment from 'moment'
 
 import {
   dateRangeSet, zoomSet, showTasksOutsideTimescaleSet, showTasksClosedSet,
   showTasksUnscheduledSet
 } from '../actions/settings';
 
+// Trickery required to have the date picker allow picking a range.
 const { RangePicker } = DatePicker;
 
 // Controls for the Gantt chart allowing basic filtering of the tasks, defining
 // a date range and zooming.
 class GanttToolbar extends Component {
-  state = {
-    dateRange: null,
-  };
 
-  onRangeChange = (date, dateString) => {
-    this.setState({
-      dateRange: date
-    });
-
-    if (date) {
-      this.props.dateRangeSet(date[0], date[1]);
-    } else {
-      this.props.dateRangeSet(null, null);
+  // Handles the user setting the date range.
+  onRangeChange = (dateRange, dateString) => {
+    let start = null;
+    let end = null;
+    if (dateRange != null) {
+      start = dateRange[0];
+      end = dateRange[1];
     }
+    this.props.dateRangeSet(start, end);
   }
 
   render() {
@@ -84,7 +82,7 @@ class GanttToolbar extends Component {
             <RangePicker
               key="0ca5b8f8-bb61-423b-9b1e-909cdf4bff83"
               onChange={this.onRangeChange}
-              value={this.state.dateRange}
+              value={this.props.dateRange}
             />,
             <Radio.Group
               key="151ea1b3-52e5-4886-8b09-4f13551f3433"
@@ -106,21 +104,22 @@ function mapStateToProps(state, ownProps) {
   const proj = state.projects.filter(proj => proj.phid === ownProps.phid);
   return {
     projectName: proj.length !== 0 ? proj[0].name : "",
-    zoom: state.settings.zoom,
     showTasksOutsideTimescale: state.settings.showTasksOutsideTimescale,
-    showTasksClosed: state.settings.showTasksClosed,
     showTasksUnscheduled: state.settings.showTasksUnscheduled,
+    showTasksClosed: state.settings.showTasksClosed,
+    dateRange: [moment(state.settings.startDate), moment(state.settings.endDate)],
+    zoom: state.settings.zoom,
   };
 }
 
 // Create functions that dispatch actions to the Redux store.
 function mapDispatchToProps(dispatch) {
   return {
-    dateRangeSet: (start, end) => dispatch(dateRangeSet(start, end)),
-    zoomSet: (zoom) => dispatch(zoomSet(zoom)),
     showTasksOutsideTimescaleSet: (setting) => dispatch(showTasksOutsideTimescaleSet(setting)),
     showTasksUnscheduledSet: (setting) => dispatch(showTasksUnscheduledSet(setting)),
-    showTasksClosedSet: (setting) => dispatch(showTasksClosedSet(setting))
+    showTasksClosedSet: (setting) => dispatch(showTasksClosedSet(setting)),
+    dateRangeSet: (start, end) => dispatch(dateRangeSet(start, end)),
+    zoomSet: (zoom) => dispatch(zoomSet(zoom))
   };
 }
 

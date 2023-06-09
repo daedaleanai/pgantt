@@ -17,10 +17,14 @@
 // along with PGantt.  If not, see <https://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 
+import dayjs from "dayjs";
+
 import {
   DATE_RANGE_SET, ZOOM_SET, SHOW_TASKS_OUTSIDE_TIMESCALE_SET,
   SHOW_TASKS_UNSCHEDULED_SET, SHOW_TASKS_CLOSED_SET
 } from '../actions/settings';
+
+import { loadState, saveState } from '../localStorage'
 
 // The initial UI settings.
 const initialSettingsState = {
@@ -32,41 +36,75 @@ const initialSettingsState = {
   showTasksClosed: false
 };
 
+const stateLocalStorageKey = "chart-settings-v1";
+const dateSerializationFormat = "YYYY-MM-DD";
+
 // Performs the action onto the state and returns the updated state.
-export function settingsReducer(state = initialSettingsState, action) {
+export function settingsReducer(state, action) {
+  if (state === undefined) {
+    state = loadState(stateLocalStorageKey);
+    if (state === null) {
+      state = initialSettingsState;
+    } else {
+      console.log("Restoring state:", state);
+      state.startDate = dayjs(state.startDate, dateSerializationFormat, true);
+      state.endDate = dayjs(state.endDate, dateSerializationFormat, true);
+    }
+
+    if (state.startDate == null || !state.startDate.isValid()) {
+      state.startDate = dayjs().day(0).toDate(); // last Sunday
+    }
+    if (state.endDate == null || !state.endDate.isValid()) {
+      state.endDate = dayjs().day(6).toDate(); // next Saturday
+    }
+    console.debug("Initial date range:", state.startDate, state.endDate);
+  }
+
+  let changedState = null;
   switch(action.type) {
-  case DATE_RANGE_SET:
-    return {
-      ...state,
-      startDate: action.startDate,
-      endDate: action.endDate
-    };
+    case DATE_RANGE_SET:
+      changedState = {
+        ...state,
+        startDate: action.startDate,
+        endDate: action.endDate
+      };
+      break;
 
-  case ZOOM_SET:
-    return {
-      ...state,
-      zoom: action.zoom
-    };
+    case ZOOM_SET:
+      changedState = {
+        ...state,
+        zoom: action.zoom
+      };
+      break;
 
-  case SHOW_TASKS_OUTSIDE_TIMESCALE_SET:
-    return {
-      ...state,
-      showTasksOutsideTimescale: action.setting
-    };
+    case SHOW_TASKS_OUTSIDE_TIMESCALE_SET:
+      changedState = {
+        ...state,
+        showTasksOutsideTimescale: action.setting
+      };
+      break;
 
-  case SHOW_TASKS_UNSCHEDULED_SET:
-    return {
-      ...state,
-      showTasksUnscheduled: action.setting
-    };
+    case SHOW_TASKS_UNSCHEDULED_SET:
+      changedState = {
+        ...state,
+        showTasksUnscheduled: action.setting
+      };
+      break;
 
-  case SHOW_TASKS_CLOSED_SET:
-    return {
-      ...state,
-      showTasksClosed: action.setting
-    };
+    case SHOW_TASKS_CLOSED_SET:
+      changedState = {
+        ...state,
+        showTasksClosed: action.setting
+      };
+      break;
+  }
 
-  default:
+  if (changedState === null) {
+    // Return the previous or the loaded or the initial state.
     return state;
+  } else {
+    console.log("Saving state:", JSON.stringify(changedState));
+    saveState(stateLocalStorageKey, changedState);
+    return changedState;
   }
 }

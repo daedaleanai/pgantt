@@ -8,6 +8,7 @@
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.6.3",
     "antd": "^4.12.3",
+    "dayjs": "^1.11.8",
     "dhtmlx-gantt": "^7.0.13",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
